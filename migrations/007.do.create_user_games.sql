@@ -6,6 +6,6 @@ CREATE TABLE user_games (
         REFERENCES games(id) ON DELETE CASCADE NOT NULL,
     own BOOLEAN NOT NULL,
     favorite INTEGER,
-    rating INTEGER,
+    rating NUMERIC,
     notes TEXT
 );

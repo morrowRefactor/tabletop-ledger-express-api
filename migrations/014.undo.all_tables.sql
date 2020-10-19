@@ -82,3 +82,5 @@ DROP TABLE IF EXISTS user_badges_mech;
 DROP TABLE IF EXISTS user_badges_cat;
 
 DROP TABLE IF EXISTS user_standings;
+
+DROP TABLE IF EXISTS schemaversion;
