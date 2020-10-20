@@ -128,7 +128,7 @@ describe('Users Endpoints', function() {
         name: 'test user',
         about: 'test about',
         password: 'cywyb3Y6Qxg',
-        joined_date: new Date('2020-03-22T16:28:32.615Z').toISOString('en', { timeZone: 'UTC' })
+        joined_date: '2020-03-22'
       };
 
       return supertest(app)

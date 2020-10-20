@@ -11,7 +11,7 @@ const serializeUsers = u => ({
   name: xss(u.name),
   about: xss(u.about),
   password: xss(u.password),
-  joined_date: new Date(u.joined_date).toISOString('en', { timeZone: 'UTC' })
+  joined_date: u.joined_date
 });
 
 usersRouter

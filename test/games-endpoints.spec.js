@@ -4,7 +4,7 @@ const { makeGamesArray, makeMaliciousGame } = require('./games.fixtures');
 const { expect } = require('chai');
 const gamesRouter = require('../src/games/games-router');
 
-describe.only('Games Endpoints', function() {
+describe('Games Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
