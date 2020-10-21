@@ -9,6 +9,7 @@ const gamesRouter = require('./games/games-router');
 const sessionsRouter = require('./sessions/sessions-router');
 const sessionScoresRouter = require('./session-scores/session-scores-router');
 const sessionNotesRouter = require('./session-notes/session-notes-router');
+const userReccosRouter = require('./user-reccos/user-reccos-router');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/games', gamesRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/session-scores', sessionScoresRouter);
 app.use('/api/session-notes', sessionNotesRouter);
+app.use('/api/user-reccos', userReccosRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, world')
