@@ -5,7 +5,7 @@ const { makeUserBadgesMechArray } = require('./user-badges-mech.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeMechBadgesArray } = require('./badges-mech.fixtures');
 
-describe.only('User Mech Badges Endpoints', function() {
+describe('User Mech Badges Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
