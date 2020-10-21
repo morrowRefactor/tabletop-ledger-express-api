@@ -6,7 +6,7 @@ const { makeUsersArray } = require('./users.fixtures');
 const { makeGamesArray } = require('./games.fixtures');
 const { makeSessionsArray } = require('./sessions.fixtures');
 
-describe.only('Session Scores Endpoints', function() {
+describe('Session Scores Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
@@ -74,7 +74,7 @@ describe.only('Session Scores Endpoints', function() {
       const testSessions = makeSessionsArray();
       const { maliciousSessionScore, expectedSessionScore } = makeMaliciousSessionScores();
 
-      beforeEach('insert malicious game', () => {
+      beforeEach('insert malicious score', () => {
         return db
           .into('users')
           .insert(testUsers)
@@ -116,7 +116,7 @@ describe.only('Session Scores Endpoints', function() {
       });
     });
 
-    context('Given there are games in the database', () => {
+    context('Given there are session scores in the database', () => {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
         const testSessions = makeSessionsArray();
