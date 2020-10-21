@@ -16,7 +16,7 @@ function makeUserGamesArray() {
             own: true,
             favorite: 2,
             rating: '8.6',
-            notes: null
+            notes: ''
         },
         {
             id: 3,

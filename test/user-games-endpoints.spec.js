@@ -349,6 +349,7 @@ describe('User Games Endpoints', function() {
         const updateUserGame = {
             game_id: 9,
             rating: '9.0',
+            notes: 'new note'
         };
         const expectedUserGame = {
           ...testUserGames[idToUpdate - 1],

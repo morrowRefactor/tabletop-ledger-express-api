@@ -342,8 +342,9 @@ describe('User Reccos Endpoints', function() {
       it(`responds with 204 when updating only a subset of fields`, () => {
         const idToUpdate = 2;
         const updateUserRecco = {
+            uid: 3,
             recco_game_id: 4,
-            name: 'New recco',
+            note: 'New recco',
         };
         const expectedUserRecco = {
           ...testUserReccos[idToUpdate - 1],

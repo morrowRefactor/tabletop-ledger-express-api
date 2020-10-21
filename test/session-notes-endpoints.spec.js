@@ -5,7 +5,7 @@ const { makeSessionNotesArray, makeMaliciousSessionNotes } = require('./session-
 const { makeUsersArray } = require('./users.fixtures');
 const { makeSessionsArray } = require('./sessions.fixtures');
 
-describe.only('Session Notes Endpoints', function() {
+describe('Session Notes Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
