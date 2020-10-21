@@ -12,6 +12,7 @@ const sessionNotesRouter = require('./session-notes/session-notes-router');
 const userReccosRouter = require('./user-reccos/user-reccos-router');
 const userGamesRouter = require('./user-games/user-games-router');
 const gameTipsRouter = require('./game-tips/game-tips-router');
+const badgesMechRouter = require('./badges-mech/badges-mech-router');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/session-notes', sessionNotesRouter);
 app.use('/api/user-reccos', userReccosRouter);
 app.use('/api/user-games', userGamesRouter);
 app.use('/api/game-tips', gameTipsRouter);
+app.use('/api/badges-mech', badgesMechRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, world')
