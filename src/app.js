@@ -13,6 +13,7 @@ const userReccosRouter = require('./user-reccos/user-reccos-router');
 const userGamesRouter = require('./user-games/user-games-router');
 const gameTipsRouter = require('./game-tips/game-tips-router');
 const badgesMechRouter = require('./badges-mech/badges-mech-router');
+const badgesCatRouter = require('./badges-cat/badges-cat-router');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/user-reccos', userReccosRouter);
 app.use('/api/user-games', userGamesRouter);
 app.use('/api/game-tips', gameTipsRouter);
 app.use('/api/badges-mech', badgesMechRouter);
+app.use('/api/badges-cat', badgesCatRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, world')

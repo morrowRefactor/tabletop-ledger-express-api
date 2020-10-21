@@ -3,7 +3,7 @@ const app = require('../src/app');
 const { expect } = require('chai');
 const { makeMechBadgesArray, makeMaliciousMechBadges } = require('./badges-mech.fixtures');
 
-describe.only('Mech Badges Endpoints', function() {
+describe('Mech Badges Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
