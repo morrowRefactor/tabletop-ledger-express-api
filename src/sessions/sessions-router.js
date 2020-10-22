@@ -10,7 +10,7 @@ const serializeSessions = sess => ({
   id: sess.id,
   game_id: sess.game_id,
   uid: sess.uid,
-  date: sess.date
+  date: sess.date.toISOString().substr(0,10)
 });
 
 sessionsRouter
@@ -89,7 +89,7 @@ sessionsRouter
       });
     };
 
-    SessionsService.updateGame(
+    SessionsService.updateSession(
         req.app.get('db'),
         req.params.sess_id,
         sessionToUpdate

@@ -4,7 +4,7 @@ const { expect } = require('chai');
 const { makeSessionScoresArray, makeMaliciousSessionScores } = require('./session-scores.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeGamesArray } = require('./games.fixtures');
-const { makeSessionsArray } = require('./sessions.fixtures');
+const { makeSessionsWIDArray } = require('./sessions.fixtures');
 
 describe('Session Scores Endpoints', function() {
   let db;
@@ -37,10 +37,10 @@ describe('Session Scores Endpoints', function() {
     context('Given there are session scores in the database', () => {
       const testUsers = makeUsersArray();
       const testGames = makeGamesArray();
-      const testSessions = makeSessionsArray();
+      const testSessions = makeSessionsWIDArray();
       const testSessionScores = makeSessionScoresArray();
 
-      beforeEach('insert session scores', () => {
+      beforeEach('insert sessions', () => {
         return db
           .into('users')
           .insert(testUsers)
@@ -71,7 +71,7 @@ describe('Session Scores Endpoints', function() {
     context(`Given an XSS attack scores`, () => {
       const testUsers = makeUsersArray();
       const testGames = makeGamesArray();
-      const testSessions = makeSessionsArray();
+      const testSessions = makeSessionsWIDArray();
       const { maliciousSessionScore, expectedSessionScore } = makeMaliciousSessionScores();
 
       beforeEach('insert malicious score', () => {
@@ -119,7 +119,7 @@ describe('Session Scores Endpoints', function() {
     context('Given there are session scores in the database', () => {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
-        const testSessions = makeSessionsArray();
+        const testSessions = makeSessionsWIDArray();
         const testSessionScores = makeSessionScoresArray();
   
         beforeEach('insert session scores', () => {
@@ -155,7 +155,7 @@ describe('Session Scores Endpoints', function() {
     context(`Given an XSS attack content`, () => {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
-        const testSessions = makeSessionsArray();
+        const testSessions = makeSessionsWIDArray();
         const { maliciousSessionScore, expectedSessionScore } = makeMaliciousSessionScores();
   
         beforeEach('insert malicious game', () => {
@@ -191,38 +191,59 @@ describe('Session Scores Endpoints', function() {
   });
 
   describe(`POST /api/session-scores`, () => {
+      
+    context('Given there are sessions in the database', () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+      const testSessions = makeSessionsWIDArray();
 
-    it(`creates a session score, responding with 201 and the new session score`, () => {
-      const newSessionScores = {
-        session_id: 5,
-        game_id: 1,
-        uid: 1,
-        score: '88',
-        name: 'John Doe',
-        winner: true
-      };
+      beforeEach('insert session scores', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+              return db
+                .into('games')
+                .insert(testGames)
+          })
+          .then(() => {
+              return db
+                .into('sessions')
+                .insert(testSessions)
+          })
+      });
 
-      return supertest(app)
-        .post('/api/session-scores')
-        .send(newSessionScores)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.session_id).to.eql(newSessionScores.session_id)
-          expect(res.body.game_id).to.eql(newSessionScores.game_id)
-          expect(res.body.uid).to.eql(newSessionScores.uid)
-          expect(res.body.score).to.eql(newSessionScores.score)
-          expect(res.body.name).to.eql(newSessionScores.name)
-          expect(res.body.winner).to.eql(newSessionScores.winner)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/session-scores/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/session-scores/${res.body.id}`)
-            .expect(res.body)
-        )
-    });
+      it(`creates a session score, responding with 201 and the new session score`, () => {
+        const newSessionScores = {
+          session_id: 5,
+          game_id: 1,
+          uid: 1,
+          score: '88',
+          name: 'John Doe',
+          winner: true
+        };
 
+        return supertest(app)
+          .post('/api/session-scores')
+          .send(newSessionScores)
+          .expect(201)
+          .expect(res => {
+            expect(res.body.session_id).to.eql(newSessionScores.session_id)
+            expect(res.body.game_id).to.eql(newSessionScores.game_id)
+            expect(res.body.uid).to.eql(newSessionScores.uid)
+            expect(res.body.score).to.eql(newSessionScores.score)
+            expect(res.body.name).to.eql(newSessionScores.name)
+            expect(res.body.winner).to.eql(newSessionScores.winner)
+            expect(res.body).to.have.property('id')
+            expect(res.headers.location).to.eql(`/api/session-scores/${res.body.id}`)
+          })
+          .then(res =>
+            supertest(app)
+              .get(`/api/session-scores/${res.body.id}`)
+              .expect(res.body)
+          )
+      });
+    
     const requiredFields = [ 'session_id', 'game_id', 'score', 'name', 'winner' ];
 
     requiredFields.forEach(field => {
@@ -257,6 +278,7 @@ describe('Session Scores Endpoints', function() {
         })
     });
   });
+  });
 
   describe(`DELETE /api/session-scores/:sess_id`, () => {
     context(`Given no session scores`, () => {
@@ -271,7 +293,7 @@ describe('Session Scores Endpoints', function() {
     context('Given there are sessions scores in the database', () => {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
-        const testSessions = makeSessionsArray();
+        const testSessions = makeSessionsWIDArray();
         const testSessionScores = makeSessionScoresArray();
   
         beforeEach('insert session scores', () => {
@@ -323,7 +345,7 @@ describe('Session Scores Endpoints', function() {
     context('Given there are session scores in the database', () => {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
-        const testSessions = makeSessionsArray();
+        const testSessions = makeSessionsWIDArray();
         const testSessionScores = makeSessionScoresArray();
   
         beforeEach('insert session scores', () => {

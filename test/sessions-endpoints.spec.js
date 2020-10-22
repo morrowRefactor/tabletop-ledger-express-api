@@ -1,7 +1,7 @@
 const knex = require('knex');
 const app = require('../src/app');
 const { expect } = require('chai');
-const { makeSessionsArray } = require('./sessions.fixtures');
+const { makeSessionsArray, makeSessionsWIDArray } = require('./sessions.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeGamesArray } = require('./games.fixtures');
 
@@ -37,6 +37,7 @@ describe('Sessions Endpoints', function() {
       const testUsers = makeUsersArray();
       const testGames = makeGamesArray();
       const testSessions = makeSessionsArray();
+      const sessionsWIDs = makeSessionsWIDArray();
 
       beforeEach('insert sessions', () => {
         return db
@@ -57,7 +58,7 @@ describe('Sessions Endpoints', function() {
       it('responds with 200 and all of the games', () => {
         return supertest(app)
           .get('/api/sessions')
-          .expect(200, testSessions)
+          .expect(200, sessionsWIDs)
         });
     });
   });
@@ -76,6 +77,7 @@ describe('Sessions Endpoints', function() {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
         const testSessions = makeSessionsArray();
+        const sessionsWIDs = makeSessionsWIDArray();
   
         beforeEach('insert sessions', () => {
           return db
@@ -95,7 +97,7 @@ describe('Sessions Endpoints', function() {
 
       it('responds with 200 and the specified session', () => {
         const sess_id = 2
-        const expectedSession = testSessions[sess_id - 1]
+        const expectedSession = sessionsWIDs[sess_id - 1]
         return supertest(app)
           .get(`/api/sessions/${sess_id}`)
           .expect(200, expectedSession)
@@ -142,7 +144,6 @@ describe('Sessions Endpoints', function() {
           expect(res.body).to.have.property('id')
           expect(res.headers.location).to.eql(`/api/sessions/${res.body.id}`)
         })
-        .then(res => console.log('test res', res.body))
         .then(res =>
           supertest(app)
             .get(`/api/sessions/${res.body.id}`)
@@ -186,6 +187,7 @@ describe('Sessions Endpoints', function() {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
         const testSessions = makeSessionsArray();
+        const sessionsWIDs = makeSessionsWIDArray();
   
         beforeEach('insert sessions', () => {
           return db
@@ -205,7 +207,7 @@ describe('Sessions Endpoints', function() {
 
       it('responds with 204 and removes the session', () => {
         const idToRemove = 2
-        const expectedSession = testSessions.filter(sess => sess.id !== idToRemove)
+        const expectedSession = sessionsWIDs.filter(sess => sess.id !== idToRemove)
         return supertest(app)
           .delete(`/api/sessions/${idToRemove}`)
           .expect(204)
@@ -232,6 +234,7 @@ describe('Sessions Endpoints', function() {
         const testUsers = makeUsersArray();
         const testGames = makeGamesArray();
         const testSessions = makeSessionsArray();
+        const sessionsWIDs = makeSessionsWIDArray();
   
         beforeEach('insert sessions', () => {
           return db
@@ -257,7 +260,7 @@ describe('Sessions Endpoints', function() {
           date: '2020-05-07'
         };
         const expectedSession = {
-          ...testSessions[idToUpdate - 1],
+          ...sessionsWIDs[idToUpdate - 1],
           ...updateSession
         };
         return supertest(app)
@@ -289,7 +292,7 @@ describe('Sessions Endpoints', function() {
             game_id: 4
         };
         const expectedSession = {
-          ...testSessions[idToUpdate - 1],
+          ...sessionsWIDs[idToUpdate - 1],
           ...updateSession
         };
 

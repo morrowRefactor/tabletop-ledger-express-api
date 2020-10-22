@@ -89,7 +89,7 @@ gameTipsRouter
       });
     };
 
-    GameTipsService.updateUserGame(
+    GameTipsService.updateGameTip(
         req.app.get('db'),
         req.params.tip_id,
         newGameTip

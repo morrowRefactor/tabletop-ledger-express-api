@@ -150,7 +150,7 @@ describe('Users Endpoints', function() {
         )
     });
 
-    const requiredFields = ['name', 'about', 'password', 'joined_date'];
+    const requiredFields = [ 'name', 'password' ];
 
     requiredFields.forEach(field => {
         const newUser = {

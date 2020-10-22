@@ -4,7 +4,7 @@ const { expect } = require('chai');
 const { makeUserStandingsArray } = require('./user-standings.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 
-describe.only('User Standings Endpoints', function() {
+describe('User Standings Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
@@ -92,54 +92,64 @@ describe.only('User Standings Endpoints', function() {
 
   describe(`POST /api/user-standings`, () => {
 
-    it(`creates a user standing, responding with 201 and the new user standing`, () => {
-      const newUserStandings = {
-        uid: 4,
-        wins: 5,
-        losses: 2,
-        sessions: 7
-      };
+    context('Given there are user standings in the database', () => {
+      const testUsers = makeUsersArray();
 
-      return supertest(app)
-        .post('/api/user-standings')
-        .send(newUserStandings)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.uid).to.eql(newUserStandings.uid)
-          expect(res.body.wins).to.eql(newUserStandings.wins)
-          expect(res.body.losses).to.eql(newUserStandings.losses)
-          expect(res.body.sessions).to.eql(newUserStandings.sessions)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/user-standings/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/user-standings/${res.body.id}`)
-            .expect(res.body)
-        )
-    });
+      beforeEach('insert users', () => {
+        return db
+            .into('users')
+            .insert(testUsers)
+      });
 
-    const requiredFields = [ 'uid', 'wins', 'losses', 'sessions' ];
-
-    requiredFields.forEach(field => {
+      it(`creates a user standing, responding with 201 and the new user standing`, () => {    
         const newUserStandings = {
-            uid: 4,
-            wins: 5,
-            losses: 2,
-            sessions: 7
+          uid: 4,
+          wins: 5,
+          losses: 2,
+          sessions: 7
         };
-
-      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newUserStandings[field]
 
         return supertest(app)
           .post('/api/user-standings')
           .send(newUserStandings)
-          .expect(400, {
-            error: { message: `Missing '${field}' in request body` }
+          .expect(201)
+          .expect(res => {
+            expect(res.body.uid).to.eql(newUserStandings.uid)
+            expect(res.body.wins).to.eql(newUserStandings.wins)
+            expect(res.body.losses).to.eql(newUserStandings.losses)
+            expect(res.body.sessions).to.eql(newUserStandings.sessions)
+            expect(res.body).to.have.property('id')
+            expect(res.headers.location).to.eql(`/api/user-standings/${res.body.id}`)
           })
+          .then(res =>
+            supertest(app)
+              .get(`/api/user-standings/${res.body.id}`)
+              .expect(res.body)
+          )
       });
-    });
+      
+      const requiredFields = [ 'uid', 'wins', 'losses', 'sessions' ];
+
+      requiredFields.forEach(field => {
+          const newUserStandings = {
+              uid: 4,
+              wins: 5,
+              losses: 2,
+              sessions: 7
+          };
+
+        it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+          delete newUserStandings[field]
+
+          return supertest(app)
+            .post('/api/user-standings')
+            .send(newUserStandings)
+            .expect(400, {
+              error: { message: `Missing '${field}' in request body` }
+            })
+        });
+      });
+  });
   });
 
   describe(`DELETE /api/user-standings/:stand_id`, () => {

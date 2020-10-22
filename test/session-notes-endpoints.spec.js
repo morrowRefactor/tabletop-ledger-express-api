@@ -3,7 +3,8 @@ const app = require('../src/app');
 const { expect } = require('chai');
 const { makeSessionNotesArray, makeMaliciousSessionNotes } = require('./session-notes.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
-const { makeSessionsArray } = require('./sessions.fixtures');
+const { makeGamesArray } = require('./games.fixtures');
+const { makeSessionsWIDArray } = require('./sessions.fixtures');
 
 describe('Session Notes Endpoints', function() {
   let db;
@@ -20,9 +21,9 @@ describe('Session Notes Endpoints', function() {
 
   after('disconnect from db', () => db.destroy());
 
-  before('clean the table', () => db.raw('TRUNCATE users, sessions, session_notes RESTART IDENTITY CASCADE'));
+  before('clean the table', () => db.raw('TRUNCATE users, games, sessions, session_notes RESTART IDENTITY CASCADE'));
 
-  afterEach('cleanup',() => db.raw('TRUNCATE users, sessions, session_notes RESTART IDENTITY CASCADE'));
+  afterEach('cleanup',() => db.raw('TRUNCATE users, games, sessions, session_notes RESTART IDENTITY CASCADE'));
 
   describe(`GET /api/session-notes`, () => {
     context(`Given no session notes`, () => {
@@ -35,13 +36,19 @@ describe('Session Notes Endpoints', function() {
 
     context('Given there are session notes in the database', () => {
       const testUsers = makeUsersArray();
-      const testSessions = makeSessionsArray();
+      const testGames = makeGamesArray();
+      const testSessions = makeSessionsWIDArray();
       const testSessionNotes = makeSessionNotesArray();
 
       beforeEach('insert session notes', () => {
         return db
           .into('users')
           .insert(testUsers)
+          .then(() => {
+            return db 
+              .into('games')
+              .insert(testGames)
+          })
           .then(() => {
               return db
                 .into('sessions')
@@ -63,13 +70,19 @@ describe('Session Notes Endpoints', function() {
 
     context(`Given an XSS attack scores`, () => {
       const testUsers = makeUsersArray();
-      const testSessions = makeSessionsArray();
+      const testGames = makeGamesArray();
+      const testSessions = makeSessionsWIDArray();
       const { maliciousSessionNote, expectedSessionNote } = makeMaliciousSessionNotes();
 
       beforeEach('insert malicious note', () => {
         return db
           .into('users')
           .insert(testUsers)
+          .then(() => {
+              return db
+                .into('games')
+                .insert(testGames)
+          })
           .then(() => {
               return db
                 .into('sessions')
@@ -105,13 +118,19 @@ describe('Session Notes Endpoints', function() {
 
     context('Given there are session notes in the database', () => {
         const testUsers = makeUsersArray();
-        const testSessions = makeSessionsArray();
+        const testGames = makeGamesArray();
+        const testSessions = makeSessionsWIDArray();
         const testSessionNotes = makeSessionNotesArray();
   
         beforeEach('insert session notes', () => {
           return db
             .into('users')
             .insert(testUsers)
+            .then(() => {
+                return db
+                  .into('games')
+                  .insert(testGames)
+            })
             .then(() => {
                 return db
                   .into('sessions')
@@ -135,13 +154,19 @@ describe('Session Notes Endpoints', function() {
 
     context(`Given an XSS attack content`, () => {
         const testUsers = makeUsersArray();
-        const testSessions = makeSessionsArray();
+        const testGames = makeGamesArray();
+        const testSessions = makeSessionsWIDArray();
         const { maliciousSessionNote, expectedSessionNote } = makeMaliciousSessionNotes();
   
         beforeEach('insert malicious game', () => {
           return db
             .into('users')
             .insert(testUsers)
+            .then(() => {
+                return db
+                  .into('games')
+                  .insert(testGames)
+            })
             .then(() => {
                 return db
                   .into('sessions')
@@ -167,62 +192,84 @@ describe('Session Notes Endpoints', function() {
 
   describe(`POST /api/session-notes`, () => {
 
-    it(`creates a session note, responding with 201 and the new session note`, () => {
-      const newSessionNote = {
-        session_id: 5,
-        uid: 1,
-        note: 'I did X and it was good.'
-      };
+    context('Given there are sessions in the database', () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+      const testSessions = makeSessionsWIDArray();
 
-      return supertest(app)
-        .post('/api/session-notes')
-        .send(newSessionNote)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.session_id).to.eql(newSessionNote.session_id)
-          expect(res.body.uid).to.eql(newSessionNote.uid)
-          expect(res.body.note).to.eql(newSessionNote.note)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/session-notes/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/session-notes/${res.body.id}`)
-            .expect(res.body)
-        )
-    });
+      beforeEach('insert sessions', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+              return db
+                .into('games')
+                .insert(testGames)
+          })
+          .then(() => {
+              return db
+                .into('sessions')
+                .insert(testSessions)
+          })
+      });
 
-    const requiredFields = [ 'session_id', 'uid', 'note' ];
-
-    requiredFields.forEach(field => {
+      it(`creates a session note, responding with 201 and the new session note`, () => {
         const newSessionNote = {
-            session_id: 5,
-            uid: 1,
-            note: 'Some note'
+          session_id: 5,
+          uid: 1,
+          note: 'I did X and it was good.'
         };
-
-      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newSessionNote[field]
 
         return supertest(app)
           .post('/api/session-notes')
           .send(newSessionNote)
-          .expect(400, {
-            error: { message: `Missing '${field}' in request body` }
+          .expect(201)
+          .expect(res => {
+            expect(res.body.session_id).to.eql(newSessionNote.session_id)
+            expect(res.body.uid).to.eql(newSessionNote.uid)
+            expect(res.body.note).to.eql(newSessionNote.note)
+            expect(res.body).to.have.property('id')
+            expect(res.headers.location).to.eql(`/api/session-notes/${res.body.id}`)
+          })
+          .then(res =>
+            supertest(app)
+              .get(`/api/session-notes/${res.body.id}`)
+              .expect(res.body)
+          )
+      });
+
+      const requiredFields = [ 'session_id', 'uid', 'note' ];
+
+      requiredFields.forEach(field => {
+          const newSessionNote = {
+              session_id: 5,
+              uid: 1,
+              note: 'Some note'
+          };
+
+        it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+          delete newSessionNote[field]
+
+          return supertest(app)
+            .post('/api/session-notes')
+            .send(newSessionNote)
+            .expect(400, {
+              error: { message: `Missing '${field}' in request body` }
+            })
+        });
+      });
+
+      it('removes XSS attack content from response', () => {
+        const { maliciousSessionNote, expectedSessionNote } = makeMaliciousSessionNotes();
+        return supertest(app)
+          .post(`/api/session-notes`)
+          .send(maliciousSessionNote)
+          .expect(201)
+          .expect(res => {
+              expect(res.body.note).to.eql(expectedSessionNote.note)
           })
       });
-    });
-
-    it('removes XSS attack content from response', () => {
-      const { maliciousSessionNote, expectedSessionNote } = makeMaliciousSessionNotes();
-      return supertest(app)
-        .post(`/api/session-notes`)
-        .send(maliciousSessionNote)
-        .expect(201)
-        .expect(res => {
-            expect(res.body.note).to.eql(expectedSessionNote.note)
-        })
-    });
+  });
   });
 
   describe(`DELETE /api/session-notes/:sess_id`, () => {
@@ -237,13 +284,19 @@ describe('Session Notes Endpoints', function() {
 
     context('Given there are sessions notes in the database', () => {
         const testUsers = makeUsersArray();
-        const testSessions = makeSessionsArray();
+        const testGames = makeGamesArray();
+        const testSessions = makeSessionsWIDArray();
         const testSessionNotes = makeSessionNotesArray();
   
         beforeEach('insert session scores', () => {
           return db
             .into('users')
             .insert(testUsers)
+            .then(() => {
+              return db
+                  .into('games')
+                  .insert(testGames)
+            })
             .then(() => {
                 return db
                   .into('sessions')
@@ -283,13 +336,19 @@ describe('Session Notes Endpoints', function() {
 
     context('Given there are session notes in the database', () => {
         const testUsers = makeUsersArray();
-        const testSessions = makeSessionsArray();
+        const testGames = makeGamesArray();
+        const testSessions = makeSessionsWIDArray();
         const testSessionNotes = makeSessionNotesArray();
   
         beforeEach('insert session scores', () => {
           return db
             .into('users')
             .insert(testUsers)
+            .then(() => {
+                return db
+                  .into('games')
+                  .insert(testGames)
+            })
             .then(() => {
                 return db
                   .into('sessions')

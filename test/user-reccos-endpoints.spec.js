@@ -108,7 +108,7 @@ describe('User Reccos Endpoints', function() {
         const testGames = makeGamesArray();
         const testUserReccos = makeUserReccosArray();
   
-        beforeEach('insert session scores', () => {
+        beforeEach('insert user reccos', () => {
           return db
             .into('users')
             .insert(testUsers)
@@ -167,64 +167,80 @@ describe('User Reccos Endpoints', function() {
 
   describe(`POST /api/user-reccos`, () => {
 
-    it(`creates a use recco, responding with 201 and the new user recco`, () => {
-      const newUserRecco = {
-        uid: 1,
-        game_id: 1,
-        recco_game_id: 2,
-        note: 'You might like this'
-      };
+    context('Given there are user reccos in the database', () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
 
-      return supertest(app)
-        .post('/api/user-reccos')
-        .send(newUserRecco)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.game_id).to.eql(newUserRecco.game_id)
-          expect(res.body.uid).to.eql(newUserRecco.uid)
-          expect(res.body.recco_game_id).to.eql(newUserRecco.recco_game_id)
-          expect(res.body.note).to.eql(newUserRecco.note)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/user-reccos/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/user-reccos/${res.body.id}`)
-            .expect(res.body)
-        )
-    });
+      beforeEach('insert user reccos', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+              return db
+                .into('games')
+                .insert(testGames)
+          })
+      });
 
-    const requiredFields = [ 'uid', 'game_id', 'recco_game_id' ];
-
-    requiredFields.forEach(field => {
+      it(`creates a use recco, responding with 201 and the new user recco`, () => {
         const newUserRecco = {
-            uid: 1,
-            game_id: 1,
-            recco_game_id: 2
+          uid: 1,
+          game_id: 1,
+          recco_game_id: 2,
+          note: 'You might like this'
         };
-
-      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newUserRecco[field]
 
         return supertest(app)
           .post('/api/user-reccos')
           .send(newUserRecco)
-          .expect(400, {
-            error: { message: `Missing '${field}' in request body` }
+          .expect(201)
+          .expect(res => {
+            expect(res.body.game_id).to.eql(newUserRecco.game_id)
+            expect(res.body.uid).to.eql(newUserRecco.uid)
+            expect(res.body.recco_game_id).to.eql(newUserRecco.recco_game_id)
+            expect(res.body.note).to.eql(newUserRecco.note)
+            expect(res.body).to.have.property('id')
+            expect(res.headers.location).to.eql(`/api/user-reccos/${res.body.id}`)
+          })
+          .then(res =>
+            supertest(app)
+              .get(`/api/user-reccos/${res.body.id}`)
+              .expect(res.body)
+          )
+      });
+
+      const requiredFields = [ 'uid', 'game_id', 'recco_game_id' ];
+
+      requiredFields.forEach(field => {
+          const newUserRecco = {
+              uid: 1,
+              game_id: 1,
+              recco_game_id: 2
+          };
+
+        it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+          delete newUserRecco[field]
+
+          return supertest(app)
+            .post('/api/user-reccos')
+            .send(newUserRecco)
+            .expect(400, {
+              error: { message: `Missing '${field}' in request body` }
+            })
+        });
+      });
+
+      it('removes XSS attack content from response', () => {
+        const { maliciousUserRecco, expectedUserRecco } = makeMaliciousUserReccos();
+        return supertest(app)
+          .post(`/api/user-reccos`)
+          .send(maliciousUserRecco)
+          .expect(201)
+          .expect(res => {
+              expect(res.body.note).to.eql(expectedUserRecco.note)
           })
       });
-    });
-
-    it('removes XSS attack content from response', () => {
-      const { maliciousUserRecco, expectedUserRecco } = makeMaliciousUserReccos();
-      return supertest(app)
-        .post(`/api/user-reccos`)
-        .send(maliciousUserRecco)
-        .expect(201)
-        .expect(res => {
-            expect(res.body.note).to.eql(expectedUserRecco.note)
-        })
-    });
+  });
   });
 
   describe(`DELETE /api/user-reccos/:recco_id`, () => {

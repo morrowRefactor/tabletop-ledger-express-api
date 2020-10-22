@@ -41,6 +41,7 @@ sessionScoresRouter
       newSessionScore
     )
       .then(sess => {
+        console.log('sess res', sess)
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${sess.id}`))

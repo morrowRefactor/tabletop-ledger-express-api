@@ -11,7 +11,7 @@ const serializeUsers = u => ({
   name: xss(u.name),
   about: xss(u.about),
   password: xss(u.password),
-  joined_date: u.joined_date
+  joined_date: u.joined_date.toISOString().substr(0,10)
 });
 
 usersRouter

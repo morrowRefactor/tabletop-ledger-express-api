@@ -105,48 +105,64 @@ describe('User Category Badges Endpoints', function() {
 
   describe(`POST /api/user-badges-cat`, () => {
 
-    it(`creates a badge, responding with 201 and the new badge`, () => {
-      const newUserCatBadge = {
-        uid: 4,
-        badge_id: 3
-      };
+    context('Given there are user category badges in the database', () => {
+      const testUsers = makeUsersArray();
+      const testCatBadges = makeCatBadgesArray();
 
-      return supertest(app)
-        .post('/api/user-badges-cat')
-        .send(newUserCatBadge)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.uid).to.eql(newUserCatBadge.uid)
-          expect(res.body.badge_id).to.eql(newUserCatBadge.badge_id)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/user-badges-cat/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/user-badges-cat/${res.body.id}`)
-            .expect(res.body)
-        )
-    });
+      beforeEach('insert user category badges', () => {
+        return db
+            .into('users')
+            .insert(testUsers)
+            .then(() => {
+                return db
+                    .into('badges_cat')
+                    .insert(testCatBadges)
+            })
+      });
 
-    const requiredFields = [ 'uid', 'badge_id' ];
-
-    requiredFields.forEach(field => {
+      it(`creates a badge, responding with 201 and the new badge`, () => {
         const newUserCatBadge = {
-            uid: 3,
-            badge_id: 4
+          uid: 4,
+          badge_id: 3
         };
-
-      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newUserCatBadge[field]
 
         return supertest(app)
           .post('/api/user-badges-cat')
           .send(newUserCatBadge)
-          .expect(400, {
-            error: { message: `Missing '${field}' in request body` }
+          .expect(201)
+          .expect(res => {
+            expect(res.body.uid).to.eql(newUserCatBadge.uid)
+            expect(res.body.badge_id).to.eql(newUserCatBadge.badge_id)
+            expect(res.body).to.have.property('id')
+            expect(res.headers.location).to.eql(`/api/user-badges-cat/${res.body.id}`)
           })
+          .then(res =>
+            supertest(app)
+              .get(`/api/user-badges-cat/${res.body.id}`)
+              .expect(res.body)
+          )
       });
-    });
+
+      const requiredFields = [ 'uid', 'badge_id' ];
+
+      requiredFields.forEach(field => {
+          const newUserCatBadge = {
+              uid: 3,
+              badge_id: 4
+          };
+
+        it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+          delete newUserCatBadge[field]
+
+          return supertest(app)
+            .post('/api/user-badges-cat')
+            .send(newUserCatBadge)
+            .expect(400, {
+              error: { message: `Missing '${field}' in request body` }
+            })
+        });
+      });
+  });
   });
 
   describe(`DELETE /api/user-badges-cat/:badge_id`, () => {

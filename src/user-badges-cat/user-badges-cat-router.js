@@ -87,7 +87,7 @@ userBadgesCatRouter
       });
     };
 
-    CatUserBadgesService.updateMechUserBadge(
+    CatUserBadgesService.updateCatUserBadge(
         req.app.get('db'),
         req.params.badge_id,
         newUserCatBadge

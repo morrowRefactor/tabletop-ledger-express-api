@@ -167,62 +167,78 @@ describe('Game Tips Endpoints', function() {
 
   describe(`POST /api/game-tips`, () => {
 
-    it(`creates a game tip, responding with 201 and the new game tip`, () => {
-      const newGameTip = {
-        uid: 1,
-        game_id: 1,
-        tip: 'do this, not that'
-      };
+    context('Given there are game tips in the database', () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
 
-      return supertest(app)
-        .post('/api/game-tips')
-        .send(newGameTip)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.game_id).to.eql(newGameTip.game_id)
-          expect(res.body.uid).to.eql(newGameTip.uid)
-          expect(res.body.tip).to.eql(newGameTip.tip)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/game-tips/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/game-tips/${res.body.id}`)
-            .expect(res.body)
-        )
-    });
+      beforeEach('insert game tips', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+              return db
+                .into('games')
+                .insert(testGames)
+          })
+      });
 
-    const requiredFields = [ 'uid', 'game_id', 'tip' ];
-
-    requiredFields.forEach(field => {
+      it(`creates a game tip, responding with 201 and the new game tip`, () => {
         const newGameTip = {
-            uid: 1,
-            game_id: 1,
-            tip: 'do something'
+          uid: 1,
+          game_id: 1,
+          tip: 'do this, not that'
         };
-
-      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newGameTip[field]
 
         return supertest(app)
           .post('/api/game-tips')
           .send(newGameTip)
-          .expect(400, {
-            error: { message: `Missing '${field}' in request body` }
+          .expect(201)
+          .expect(res => {
+            expect(res.body.game_id).to.eql(newGameTip.game_id)
+            expect(res.body.uid).to.eql(newGameTip.uid)
+            expect(res.body.tip).to.eql(newGameTip.tip)
+            expect(res.body).to.have.property('id')
+            expect(res.headers.location).to.eql(`/api/game-tips/${res.body.id}`)
+          })
+          .then(res =>
+            supertest(app)
+              .get(`/api/game-tips/${res.body.id}`)
+              .expect(res.body)
+          )
+      });
+
+      const requiredFields = [ 'uid', 'game_id', 'tip' ];
+
+      requiredFields.forEach(field => {
+          const newGameTip = {
+              uid: 1,
+              game_id: 1,
+              tip: 'do something'
+          };
+
+        it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+          delete newGameTip[field]
+
+          return supertest(app)
+            .post('/api/game-tips')
+            .send(newGameTip)
+            .expect(400, {
+              error: { message: `Missing '${field}' in request body` }
+            })
+        });
+      });
+
+      it('removes XSS attack content from response', () => {
+        const { maliciousGameTip, expectedGameTip } = makeMaliciousGameTips();
+        return supertest(app)
+          .post(`/api/game-tips`)
+          .send(maliciousGameTip)
+          .expect(201)
+          .expect(res => {
+              expect(res.body.tip).to.eql(expectedGameTip.tip)
           })
       });
-    });
-
-    it('removes XSS attack content from response', () => {
-      const { maliciousGameTip, expectedGameTip } = makeMaliciousGameTips();
-      return supertest(app)
-        .post(`/api/game-tips`)
-        .send(maliciousGameTip)
-        .expect(201)
-        .expect(res => {
-            expect(res.body.tip).to.eql(expectedGameTip.tip)
-        })
-    });
+  });
   });
 
   describe(`DELETE /api/game-tips/:tip_id`, () => {

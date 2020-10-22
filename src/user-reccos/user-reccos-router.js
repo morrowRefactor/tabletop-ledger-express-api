@@ -8,7 +8,7 @@ const jsonParser = express.json();
 
 const serializeUserRecco = recco => ({
   id: recco.id,
-  uid: recco.id,
+  uid: recco.uid,
   game_id: recco.game_id,
   recco_game_id: recco.recco_game_id,
   note: xss(recco.note)
@@ -39,6 +39,7 @@ userReccosRouter
       newUserRecco
     )
       .then(recco => {
+        console.log('recco res', recco)
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${recco.id}`))

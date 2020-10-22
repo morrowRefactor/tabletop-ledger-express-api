@@ -167,67 +167,83 @@ describe('User Games Endpoints', function() {
 
   describe(`POST /api/user-games`, () => {
 
-    it(`creates a user game, responding with 201 and the new user game`, () => {
-      const newUserGame = {
-        uid: 1,
-        game_id: 1,
-        own: true,
-        favorite: 6,
-        rating: '7.7',
-        notes: 'good stuff'
-      };
+    context('Given there are user games in the database', () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
 
-      return supertest(app)
-        .post('/api/user-games')
-        .send(newUserGame)
-        .expect(201)
-        .expect(res => {
-          expect(res.body.game_id).to.eql(newUserGame.game_id)
-          expect(res.body.uid).to.eql(newUserGame.uid)
-          expect(res.body.own).to.eql(newUserGame.own)
-          expect(res.body.favorite).to.eql(newUserGame.favorite)
-          expect(res.body.rating).to.eql(newUserGame.rating)
-          expect(res.body.notes).to.eql(newUserGame.notes)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/user-games/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/user-games/${res.body.id}`)
-            .expect(res.body)
-        )
-    });
-
-    const requiredFields = [ 'uid', 'game_id' ];
-
-    requiredFields.forEach(field => {
+      beforeEach('insert user games', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+              return db
+                .into('games')
+                .insert(testGames)
+          })
+      });
+      
+      it(`creates a user game, responding with 201 and the new user game`, () => {
         const newUserGame = {
-            uid: 1,
-            game_id: 1
+          uid: 1,
+          game_id: 1,
+          own: true,
+          favorite: 6,
+          rating: '7.7',
+          notes: 'good stuff'
         };
-
-      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newUserGame[field]
 
         return supertest(app)
           .post('/api/user-games')
           .send(newUserGame)
-          .expect(400, {
-            error: { message: `Missing '${field}' in request body` }
+          .expect(201)
+          .expect(res => {
+            expect(res.body.game_id).to.eql(newUserGame.game_id)
+            expect(res.body.uid).to.eql(newUserGame.uid)
+            expect(res.body.own).to.eql(newUserGame.own)
+            expect(res.body.favorite).to.eql(newUserGame.favorite)
+            expect(res.body.rating).to.eql(newUserGame.rating)
+            expect(res.body.notes).to.eql(newUserGame.notes)
+            expect(res.body).to.have.property('id')
+            expect(res.headers.location).to.eql(`/api/user-games/${res.body.id}`)
+          })
+          .then(res =>
+            supertest(app)
+              .get(`/api/user-games/${res.body.id}`)
+              .expect(res.body)
+          )
+      });
+
+      const requiredFields = [ 'uid', 'game_id' ];
+
+      requiredFields.forEach(field => {
+          const newUserGame = {
+              uid: 1,
+              game_id: 1
+          };
+
+        it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+          delete newUserGame[field]
+
+          return supertest(app)
+            .post('/api/user-games')
+            .send(newUserGame)
+            .expect(400, {
+              error: { message: `Missing '${field}' in request body` }
+            })
+        });
+      });
+
+      it('removes XSS attack content from response', () => {
+        const { maliciousUserGame, expectedUserGame } = makeMaliciousUserGames();
+        return supertest(app)
+          .post(`/api/user-games`)
+          .send(maliciousUserGame)
+          .expect(201)
+          .expect(res => {
+              expect(res.body.notes).to.eql(expectedUserGame.notes)
           })
       });
-    });
-
-    it('removes XSS attack content from response', () => {
-      const { maliciousUserGame, expectedUserGame } = makeMaliciousUserGames();
-      return supertest(app)
-        .post(`/api/user-games`)
-        .send(maliciousUserGame)
-        .expect(201)
-        .expect(res => {
-            expect(res.body.notes).to.eql(expectedUserGame.notes)
-        })
-    });
+  });
   });
 
   describe(`DELETE /api/user-games/:game_id`, () => {
