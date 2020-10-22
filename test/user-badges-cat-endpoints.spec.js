@@ -5,7 +5,7 @@ const { makeUserBadgesCatArray } = require('./user-badges-cat.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeCatBadgesArray } = require('./badges-cat.fixtures');
 
-describe.only('User Category Badges Endpoints', function() {
+describe('User Category Badges Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
