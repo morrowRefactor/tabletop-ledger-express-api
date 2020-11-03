@@ -122,4 +122,25 @@ sessionsRouter
       res.json(res.sess)
     })
 
+    sessionsRouter
+    .route('/game-sessions/:game_id')
+    .all((req, res, next) => {
+      SessionsService.getSessionsByGame(
+        req.app.get('db')
+      )
+        .then(sess => {
+          if (!sess || sess.length < 1) {
+            return res.status(404).json({
+              error: { message: `Game sessions don't exist` }
+            })
+          }
+          res.sess = sess
+          next()
+        })
+        .catch(next)
+    })
+    .get((req, res, next) => {
+      res.json(res.sess)
+    })
+
 module.exports = sessionsRouter;

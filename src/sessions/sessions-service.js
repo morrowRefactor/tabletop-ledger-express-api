@@ -27,6 +27,9 @@ const SessionsService = {
     getUserSessions(knex, uid) {
         return knex.from('sessions').select('*').where('uid', uid)
     },
+    getSessionsByGame(knex) {
+        return knex.from('sessions').select('game_id').count('game_id as cnt').groupBy('game_id').orderBy('cnt', 'desc')
+    },
 };
 
 module.exports = SessionsService;

@@ -105,7 +105,7 @@ describe('Sessions Endpoints', function() {
     });
   });
 
-  describe.only(`GET /api/sessions/user-sessions/:uid`, () => {
+  describe(`GET /api/sessions/user-sessions/:uid`, () => {
     context(`Given no session`, () => {
       it(`responds with 404`, () => {
         const uid = 123;
@@ -156,6 +156,70 @@ describe('Sessions Endpoints', function() {
 
         return supertest(app)
           .get(`/api/sessions/user-sessions/${uid}`)
+          .expect(200, expectedSession)
+      });
+    });
+  });
+
+  describe.only(`GET /api/sessions/game-sessions/:game_id`, () => {
+    context(`Given no session`, () => {
+      it(`responds with 404`, () => {
+        const game_id = 123;
+        return supertest(app)
+          .get(`/api/sessions/game-sessions/${game_id}`)
+          .expect(404, { error: { message: `Game sessions don't exist` } })
+      });
+    });
+
+    context('Given there are sessions in the database', () => {
+        const testUsers = makeUsersArray();
+        const testGames = makeGamesArray();
+        const testSessions = makeSessionsArray();
+        const sessionsWIDs = makeSessionsWIDArray();
+  
+        beforeEach('insert sessions', () => {
+          return db
+            .into('users')
+            .insert(testUsers)
+            .then(() => {
+                return db 
+                  .into('games')
+                  .insert(testGames)
+            })
+            .then(() => {
+                return db
+                  .into('sessions')
+                  .insert(testSessions)
+            })
+        });
+
+      it('responds with 200 and the specified session', () => {
+        const game_id = 1
+        const expectedSession = [
+          {
+            "game_id": 1,
+            "cnt": "5",
+          },
+          {
+            "game_id": 3,
+            "cnt": "2",
+          },
+          {
+            "game_id": 4,
+            "cnt": "1",
+          },
+          {
+            "game_id": 10,
+            "cnt": "1",
+          },
+          {
+            "game_id": 7,
+            "cnt": "1",
+          }
+        ];
+
+        return supertest(app)
+          .get(`/api/sessions/game-sessions/${game_id}`)
           .expect(200, expectedSession)
       });
     });
