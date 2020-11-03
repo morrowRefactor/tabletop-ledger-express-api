@@ -24,6 +24,9 @@ const SessionsService = {
             .where({ id })
             .update(newSessionFields)
     },
+    getUserSessions(knex, uid) {
+        return knex.from('sessions').select('*').where('uid', uid)
+    },
 };
 
 module.exports = SessionsService;

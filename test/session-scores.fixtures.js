@@ -103,7 +103,7 @@ function makeSessionScoresArray() {
 };
 
 function makeMaliciousSessionScores() {
-    const maliciousSessionScore = {
+    const maliciousSessionScore = [{
         id: 911,
         session_id: 1,
         game_id: 1,
@@ -111,8 +111,8 @@ function makeMaliciousSessionScores() {
         score: '11',
         name: 'Naughty naughty very naughty <script>alert("xss");</script>',
         winner: true
-    };
-    const expectedSessionScore = {
+    }];
+    const expectedSessionScore = [{
         ...maliciousSessionScore,
         session_id: 1,
         game_id: 1,
@@ -120,7 +120,7 @@ function makeMaliciousSessionScores() {
         score: '11',
         name: 'Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;',
         winner: true
-    };
+    }];
     return {
         maliciousSessionScore,
         expectedSessionScore

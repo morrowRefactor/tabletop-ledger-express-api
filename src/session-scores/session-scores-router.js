@@ -27,27 +27,45 @@ sessionScoresRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { session_id, game_id, uid, score, name, winner } = req.body;
-    const newSessionScore = { session_id, game_id, uid, score, name, winner };
-    const sessionScoreReqs = { session_id, game_id, score, name, winner };
+    const newSessionScores = req.body;
+    let sessCount;
 
-    for (const [key, value] of Object.entries(sessionScoreReqs))
-      if (value == null)
-        return res.status(400).json({
-          error: { message: `Missing '${key}' in request body` }
-        });
-    SessionScoresService.insertScores(
-      req.app.get('db'),
-      newSessionScore
-    )
-      .then(sess => {
-        console.log('sess res', sess)
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${sess.id}`))
-          .json(serializeSessionScores(sess));
+    newSessionScores.forEach(sess => {
+      const { session_id, game_id, score, name, winner } = sess;
+      const sessionScoreReqs = { session_id, game_id, score, name, winner };
+
+      for (const [key, value] of Object.entries(sessionScoreReqs))
+        if (value == null)
+          return res.status(400).json({
+            error: { message: `Missing '${key}' in request body` }
+      });
+    });
+
+    const promise = new Promise(function (resolve) {
+      newSessionScores.forEach(sess => {
+        const sessScore = {
+          session_id: sess.session_id,
+          game_id: sess.game_id,
+          uid: sess.uid,
+          score: sess.score,
+          name: sess.name,
+          winner: sess.winner
+        };
+
+        SessionScoresService.insertScores(
+          req.app.get('db'),
+          sessScore
+        )
       })
-      .catch(next)
+      
+      return resolve();
+    });
+    
+    promise.then(()=> {
+        return res
+          .status(201)
+    })
+    .catch(next)
   });
 
 sessionScoresRouter

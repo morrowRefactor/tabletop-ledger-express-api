@@ -105,6 +105,62 @@ describe('Sessions Endpoints', function() {
     });
   });
 
+  describe.only(`GET /api/sessions/user-sessions/:uid`, () => {
+    context(`Given no session`, () => {
+      it(`responds with 404`, () => {
+        const uid = 123;
+        return supertest(app)
+          .get(`/api/sessions/user-sessions/${uid}`)
+          .expect(404, { error: { message: `User sessions don't exist` } })
+      });
+    });
+
+    context('Given there are sessions in the database', () => {
+        const testUsers = makeUsersArray();
+        const testGames = makeGamesArray();
+        const testSessions = makeSessionsArray();
+        const sessionsWIDs = makeSessionsWIDArray();
+  
+        beforeEach('insert sessions', () => {
+          return db
+            .into('users')
+            .insert(testUsers)
+            .then(() => {
+                return db 
+                  .into('games')
+                  .insert(testGames)
+            })
+            .then(() => {
+                return db
+                  .into('sessions')
+                  .insert(testSessions)
+            })
+        });
+
+      it('responds with 200 and the specified session', () => {
+        const uid = 1
+        const expectedSession = [
+          {
+              "id": 4,
+              "game_id": 3,
+              "uid": 1,
+              "date": "2020-07-29T07:00:00.000Z"
+          },
+          {
+              "id": 10,
+              "game_id": 10,
+              "uid": 1,
+              "date": "2020-03-02T08:00:00.000Z"
+          }
+        ];
+
+        return supertest(app)
+          .get(`/api/sessions/user-sessions/${uid}`)
+          .expect(200, expectedSession)
+      });
+    });
+  });
+
   describe(`POST /api/sessions`, () => {
     const testUsers = makeUsersArray();
     const testGames = makeGamesArray();
