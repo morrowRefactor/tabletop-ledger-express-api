@@ -160,3 +160,17 @@ INSERT INTO user_standings (uid, wins, losses, sessions)
         (4, 0, 2, 2),
         (5, 0, 1, 1)
 ;
+
+INSERT INTO games_cat (cat_id, name)
+    VALUES
+        (123, 'Adventure'),
+        (234, 'City Building'),
+        (345, 'Deduction')
+;
+
+INSERT INTO games_mech (mech_id, name)
+    VALUES
+        (123, 'Cooperative'),
+        (234, 'Dungeon Crawler'),
+        (345, 'Worker Placement')
+;
