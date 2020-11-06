@@ -38,18 +38,18 @@ gamesMechRouter
       .then(game => {
         res
           .status(201)
-          .location(path.posix.join(req.originalUrl, `/${game.mech_id}`))
+          .location(path.posix.join(req.originalUrl, `/${game.id}`))
           .json(serializeMechGames(game));
       })
       .catch(next)
   });
 
 gamesMechRouter
-  .route('/:mech_id')
+  .route('/:id')
   .all((req, res, next) => {
     MechGamesService.getById(
       req.app.get('db'),
-      req.params.mech_id
+      req.params.id
     )
       .then(game => {
         if (!game) {
@@ -68,7 +68,7 @@ gamesMechRouter
   .delete((req, res, next) => {
     MechGamesService.deleteMechGame(
       req.app.get('db'),
-      req.params.mech_id
+      req.params.id
     )
       .then(numRowsAffected => {
         res.status(204).end()
@@ -78,6 +78,7 @@ gamesMechRouter
   .patch(jsonParser, (req, res, next) => {
     const { mech_id, name } = req.body;
     const newMechGame = { mech_id, name };
+    console.log('newmech', newMechGame)
 
     const numberOfValues = Object.values(newMechGame).filter(Boolean).length;
     if (numberOfValues === 0) {
@@ -88,9 +89,9 @@ gamesMechRouter
       });
     };
 
-    MechGamesService.updateMechBadge(
+    MechGamesService.updateMechGame(
         req.app.get('db'),
-        req.params.mech_id,
+        req.params.id,
         newMechGame
       )
       .then(numRowsAffected => {

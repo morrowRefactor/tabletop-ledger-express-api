@@ -12,7 +12,7 @@ const MechGamesService = {
             })
     },
     getById(knex, id) {
-       return knex.from('games_mech').select('*').where('mech_id', id).first()
+       return knex.from('games_mech').select('*').where('id', id).first()
     },
     deleteMechGame(knex, id) {
         return knex('games_mech')

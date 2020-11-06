@@ -68,12 +68,12 @@ describe('Games Category Endpoints', function() {
     });
   });
 
-  describe(`GET /api/games-cat/:cat_id`, () => {
+  describe(`GET /api/games-cat/:id`, () => {
     context(`Given no game categories`, () => {
       it(`responds with 404`, () => {
-        const cat_id = 123;
+        const id = 123;
         return supertest(app)
-          .get(`/api/games-cat/${cat_id}`)
+          .get(`/api/games-cat/${id}`)
           .expect(404, { error: { message: `Game category doesn't exist` } })
       });
     });
@@ -88,10 +88,10 @@ describe('Games Category Endpoints', function() {
         });
 
       it('responds with 200 and the specified category', () => {
-        const cat_id = 123;
-        const expectedCatGame = testCatGames[0];
+        const id = 2;
+        const expectedCatGame = testCatGames[id - 1];
         return supertest(app)
-          .get(`/api/games-cat/${cat_id}`)
+          .get(`/api/games-cat/${id}`)
           .expect(200, expectedCatGame)
       });
     });
@@ -107,7 +107,7 @@ describe('Games Category Endpoints', function() {
 
       it('removes XSS attack content', () => {
         return supertest(app)
-          .get(`/api/games-cat/${maliciousCatGame.cat_id}`)
+          .get(`/api/games-cat/${maliciousCatGame.id}`)
           .expect(200)
           .expect(res => {
             expect(res.body.name).to.eql(expectedCatGame.name)
@@ -133,11 +133,11 @@ describe('Games Category Endpoints', function() {
           expect(res.body.name).to.eql(newCatGame.name)
           expect(res.body.cat_id).to.eql(newCatGame.cat_id)
           expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/games-cat/${res.body.cat_id}`)
+          expect(res.headers.location).to.eql(`/api/games-cat/${res.body.id}`)
         })
         .then(res =>
           supertest(app)
-            .get(`/api/games-cat/${res.body.cat_id}`)
+            .get(`/api/games-cat/${res.body.id}`)
             .expect(res.body)
         )
     });
@@ -175,12 +175,12 @@ describe('Games Category Endpoints', function() {
     });
   });
 
-  describe(`DELETE /api/games-cat/:cat_id`, () => {
+  describe(`DELETE /api/games-cat/:id`, () => {
     context(`Given no categories`, () => {
       it(`responds with 404`, () => {
-        const cat_id = 123;
+        const id = 123;
         return supertest(app)
-          .delete(`/api/games-cat/${cat_id}`)
+          .delete(`/api/games-cat/${id}`)
           .expect(404, { error: { message: `Game category doesn't exist` } })
       })
     });
@@ -209,12 +209,12 @@ describe('Games Category Endpoints', function() {
     });
   });
 
-  describe(`PATCH /api/games-cat/:cat_id`, () => {
+  describe(`PATCH /api/games-cat/:id`, () => {
     context(`Given no game categories`, () => {
       it(`responds with 404`, () => {
-        const cat_id = 123;
+        const id = 123;
         return supertest(app)
-          .delete(`/api/games-cat/${cat_id}`)
+          .delete(`/api/games-cat/${id}`)
           .expect(404, { error: { message: `Game category doesn't exist` } })
       })
     });

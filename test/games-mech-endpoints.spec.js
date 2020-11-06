@@ -3,7 +3,7 @@ const app = require('../src/app');
 const { expect } = require('chai');
 const { makeMechGamesArray, makeMaliciousMechGames } = require('./games-mech.fixtures');
 
-describe.only('Game Mechanics Endpoints', function() {
+describe('Game Mechanics Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
@@ -88,10 +88,10 @@ describe.only('Game Mechanics Endpoints', function() {
         });
 
       it('responds with 200 and the specified mechanic', () => {
-        const mech_id = 123;
-        const expectedMechGame = testMechGames[0];
+        const id = 2;
+        const expectedMechGame = testMechGames[id - 1];
         return supertest(app)
-          .get(`/api/games-mech/${mech_id}`)
+          .get(`/api/games-mech/${id}`)
           .expect(200, expectedMechGame)
       });
     });
@@ -107,7 +107,7 @@ describe.only('Game Mechanics Endpoints', function() {
 
       it('removes XSS attack content', () => {
         return supertest(app)
-          .get(`/api/games-mech/${maliciousMechGame.mech_id}`)
+          .get(`/api/games-mech/${maliciousMechGame.id}`)
           .expect(200)
           .expect(res => {
             expect(res.body.name).to.eql(expectedMechGame.name)
@@ -133,11 +133,11 @@ describe.only('Game Mechanics Endpoints', function() {
           expect(res.body.name).to.eql(newMechGame.name)
           expect(res.body.mech_id).to.eql(newMechGame.mech_id)
           expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/games-mech/${res.body.mech_id}`)
+          expect(res.headers.location).to.eql(`/api/games-mech/${res.body.id}`)
         })
         .then(res =>
           supertest(app)
-            .get(`/api/games-mech/${res.body.mech_id}`)
+            .get(`/api/games-mech/${res.body.id}`)
             .expect(res.body)
         )
     });
@@ -178,9 +178,9 @@ describe.only('Game Mechanics Endpoints', function() {
   describe(`DELETE /api/games-mech/:mech_id`, () => {
     context(`Given no game mechanics`, () => {
       it(`responds with 404`, () => {
-        const mech_id = 123;
+        const id = 123;
         return supertest(app)
-          .delete(`/api/games-mech/${mech_id}`)
+          .delete(`/api/games-mech/${id}`)
           .expect(404, { error: { message: `Game mechanic doesn't exist` } })
       })
     });
@@ -196,7 +196,7 @@ describe.only('Game Mechanics Endpoints', function() {
 
       it('responds with 204 and removes the mechanic', () => {
         const idToRemove = 2;
-        const expectedMechGame = testMechGames.filter(game => game.id !== idToRemove)
+        const expectedMechGame = testMechGames.filter(game => game.id !== idToRemove);
         return supertest(app)
           .delete(`/api/games-mech/${idToRemove}`)
           .expect(204)
@@ -209,12 +209,12 @@ describe.only('Game Mechanics Endpoints', function() {
     });
   });
 
-  describe(`PATCH /api/games-mech/:mech_id`, () => {
+  describe(`PATCH /api/games-mech/:id`, () => {
     context(`Given no game mechanics`, () => {
       it(`responds with 404`, () => {
-        const mech_id = 123;
+        const id = 222;
         return supertest(app)
-          .delete(`/api/games-mech/${mech_id}`)
+          .delete(`/api/games-mech/${id}`)
           .expect(404, { error: { message: `Game mechanic doesn't exist` } })
       })
     });
@@ -222,13 +222,13 @@ describe.only('Game Mechanics Endpoints', function() {
     context('Given there are game mechanics in the database', () => {
         const testMechGames = makeMechGamesArray();
   
-        beforeEach('insert category', () => {
+        beforeEach('insert mechanic', () => {
           return db
             .into('games_mech')
             .insert(testMechGames)
         });
 
-      it('responds with 204 and updates the category', () => {
+      it('responds with 204 and updates the mechanic', () => {
         const idToUpdate = 2;
         const updateMechGame = {
           name: 'new mech name',
@@ -238,6 +238,7 @@ describe.only('Game Mechanics Endpoints', function() {
           ...testMechGames[idToUpdate - 1],
           ...updateMechGame
         };
+        console.log('updateobj', updateMechGame)
         return supertest(app)
           .patch(`/api/games-mech/${idToUpdate}`)
           .send(updateMechGame)
@@ -256,7 +257,7 @@ describe.only('Game Mechanics Endpoints', function() {
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
-              message: `Request body must contain a game mechanic and BGG ID`
+              message: `Request body must contain a mechanic name and BGG ID`
             }
           })
       });
@@ -265,7 +266,7 @@ describe.only('Game Mechanics Endpoints', function() {
         const idToUpdate = 2;
         const updateMechGame = {
             name: 'new mech name',
-            cat_id: 567
+            mech_id: 567
         };
         const expectedMechGame = {
           ...testMechGames[idToUpdate - 1],

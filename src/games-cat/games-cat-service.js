@@ -12,7 +12,7 @@ const CatGamesService = {
             })
     },
     getById(knex, id) {
-       return knex.from('games_cat').select('*').where('cat_id', id).first()
+       return knex.from('games_cat').select('*').where('id', id).first()
     },
     deleteCatGame(knex, id) {
         return knex('games_cat')

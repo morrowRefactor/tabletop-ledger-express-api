@@ -38,18 +38,18 @@ gamesCatRouter
       .then(game => {
         res
           .status(201)
-          .location(path.posix.join(req.originalUrl, `/${game.cat_id}`))
+          .location(path.posix.join(req.originalUrl, `/${game.id}`))
           .json(serializeCatGames(game));
       })
       .catch(next)
   });
 
 gamesCatRouter
-  .route('/:cat_id')
+  .route('/:id')
   .all((req, res, next) => {
     CatGamesService.getById(
       req.app.get('db'),
-      req.params.cat_id
+      req.params.id
     )
       .then(game => {
         if (!game) {
@@ -68,7 +68,7 @@ gamesCatRouter
   .delete((req, res, next) => {
     CatGamesService.deleteCatGame(
       req.app.get('db'),
-      req.params.cat_id
+      req.params.id
     )
       .then(numRowsAffected => {
         res.status(204).end()
@@ -88,9 +88,9 @@ gamesCatRouter
       });
     };
 
-    CatGamesService.updateCatBadge(
+    CatGamesService.updateCatGame(
         req.app.get('db'),
-        req.params.cat_id,
+        req.params.id,
         newCatGame
       )
       .then(numRowsAffected => {
