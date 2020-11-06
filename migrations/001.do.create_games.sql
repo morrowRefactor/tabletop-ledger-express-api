@@ -4,5 +4,6 @@ CREATE TABLE games (
     bgg_id INTEGER NOT NULL,
     bgg_rating NUMERIC NOT NULL,
     description TEXT NOT NULL,
+    year_pub INTEGER,
     image TEXT
 );

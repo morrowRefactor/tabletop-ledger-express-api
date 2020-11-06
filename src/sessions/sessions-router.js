@@ -10,7 +10,8 @@ const serializeSessions = sess => ({
   id: sess.id,
   game_id: sess.game_id,
   uid: sess.uid,
-  date: sess.date.toISOString().substr(0,10)
+  date: sess.date.toISOString().substr(0,10),
+  name: xss(sess.name)
 });
 
 sessionsRouter

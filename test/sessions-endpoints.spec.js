@@ -1,7 +1,7 @@
 const knex = require('knex');
 const app = require('../src/app');
 const { expect } = require('chai');
-const { makeSessionsArray, makeSessionsWIDArray } = require('./sessions.fixtures');
+const { makeSessionsArray, makeSessionsWIDArray, makeMaliciousSession } = require('./sessions.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeGamesArray } = require('./games.fixtures');
 
@@ -59,7 +59,38 @@ describe('Sessions Endpoints', function() {
         return supertest(app)
           .get('/api/sessions')
           .expect(200, sessionsWIDs)
-        });
+      });
+    });
+
+    context(`Given an XSS attack session`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+      const { maliciousSession, expectedSession } = makeMaliciousSession();
+
+      beforeEach('insert malicious session', () => {
+        return db
+        .into('users')
+        .insert(testUsers)
+        .then(() => {
+              return db 
+                .into('games')
+                .insert(testGames)
+        })
+        .then(() => {
+          return db
+          .into('sessions')
+          .insert(maliciousSession)
+        })
+      });
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get(`/api/sessions`)
+          .expect(200)
+          .expect(res => {
+            expect(res.body[0].name).to.eql(expectedSession.name)
+          })
+      });
     });
   });
 
@@ -103,6 +134,37 @@ describe('Sessions Endpoints', function() {
           .expect(200, expectedSession)
       });
     });
+
+    context(`Given an XSS attack session`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+      const { maliciousSession, expectedSession } = makeMaliciousSession();
+
+      beforeEach('insert malicious session', () => {
+        return db
+        .into('users')
+        .insert(testUsers)
+        .then(() => {
+              return db 
+                .into('games')
+                .insert(testGames)
+        })
+        .then(() => {
+          return db
+          .into('sessions')
+          .insert(maliciousSession)
+        })
+      });
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get(`/api/sessions`)
+          .expect(200)
+          .expect(res => {
+            expect(res.body[0].name).to.eql(expectedSession.name)
+          })
+      });
+    });
   });
 
   describe(`GET /api/sessions/user-sessions/:uid`, () => {
@@ -144,13 +206,15 @@ describe('Sessions Endpoints', function() {
               "id": 4,
               "game_id": 3,
               "uid": 1,
-              "date": "2020-07-29T07:00:00.000Z"
+              "date": "2020-07-29T07:00:00.000Z",
+              "name": "The Punishment"
           },
           {
               "id": 10,
               "game_id": 10,
               "uid": 1,
-              "date": "2020-03-02T08:00:00.000Z"
+              "date": "2020-03-02T08:00:00.000Z",
+              "name": ''
           }
         ];
 
@@ -161,7 +225,7 @@ describe('Sessions Endpoints', function() {
     });
   });
 
-  describe.only(`GET /api/sessions/game-sessions/:game_id`, () => {
+  describe(`GET /api/sessions/game-sessions/:game_id`, () => {
     context(`Given no session`, () => {
       it(`responds with 404`, () => {
         const game_id = 123;
@@ -288,6 +352,26 @@ describe('Sessions Endpoints', function() {
           .send(newSession)
           .expect(400, {
             error: { message: `Missing '${field}' in request body` }
+          })
+      });
+    });
+
+    context(`Given an XSS attack session`, () => {
+      const { maliciousSession, expectedSession } = makeMaliciousSession();
+
+      beforeEach('insert malicious session', () => {
+        return db
+          .into('sessions')
+          .insert(maliciousSession)
+      });
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get(`/api/sessions`)
+          .expect(200)
+          .expect(res => {
+            const resIndex = res.body.length - 1;
+            expect(res.body[resIndex].name).to.eql(expectedSession.name)
           })
       });
     });

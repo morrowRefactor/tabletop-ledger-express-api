@@ -19,7 +19,6 @@ sessionNotesRouter
     const knexInstance = req.app.get('db');
     SessionNotesService.getAllNotes(knexInstance)
       .then(sess => {
-        console.log('sess res', sess)
         res.json(sess.map(serializeSessionNote))
       })
       .catch(next)

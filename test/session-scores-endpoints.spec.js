@@ -238,8 +238,8 @@ describe('Session Scores Endpoints', function() {
           .send(newSessionScores)
           .expect(201)
       });
-    /*
-    const requiredFields = [ 'session_id', 'game_id', 'score', 'name', 'winner' ];
+    
+    const requiredFields = [ 'session_id', 'game_id', 'name', 'winner' ];
 
     requiredFields.forEach(field => {
         const newSessionScores = [{
@@ -260,7 +260,7 @@ describe('Session Scores Endpoints', function() {
             error: { message: `Missing '${field}' in request body` }
           })
       });
-    });*/
+    });
   });
   });
 

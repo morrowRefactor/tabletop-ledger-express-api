@@ -28,11 +28,10 @@ sessionScoresRouter
   })
   .post(jsonParser, (req, res, next) => {
     const newSessionScores = req.body;
-    let sessCount;
 
     newSessionScores.forEach(sess => {
       const { session_id, game_id, score, name, winner } = sess;
-      const sessionScoreReqs = { session_id, game_id, score, name, winner };
+      const sessionScoreReqs = { session_id, game_id, name, winner };
 
       for (const [key, value] of Object.entries(sessionScoreReqs))
         if (value == null)
