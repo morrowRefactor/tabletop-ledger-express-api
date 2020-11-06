@@ -87,4 +87,8 @@ DROP TABLE IF EXISTS games_cat;
 
 DROP TABLE IF EXISTS games_mech; 
 
+DROP TABLE IF EXISTS games_cat_matches;
+
+DROP TABLE IF EXISTS games_mech_matches;
+
 DROP TABLE IF EXISTS schemaversion;

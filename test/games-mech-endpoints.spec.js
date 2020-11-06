@@ -238,7 +238,7 @@ describe('Game Mechanics Endpoints', function() {
           ...testMechGames[idToUpdate - 1],
           ...updateMechGame
         };
-        console.log('updateobj', updateMechGame)
+        
         return supertest(app)
           .patch(`/api/games-mech/${idToUpdate}`)
           .send(updateMechGame)

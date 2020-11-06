@@ -174,3 +174,31 @@ INSERT INTO games_mech (mech_id, name)
         (234, 'Dungeon Crawler'),
         (345, 'Worker Placement')
 ;
+
+INSERT INTO games_cat_matches (game_id, cat_id)
+    VALUES
+        (1, 123),
+        (3, 123),
+        (6, 123),
+        (9, 123),
+        (4, 234),
+        (5, 234)
+;
+
+INSERT INTO games_mech_matches (game_id, mech_id)
+    VALUES
+        (1, 123),
+        (2, 123),
+        (5, 123),
+        (6, 123),
+        (7, 123),
+        (8, 123),
+        (9, 123),
+        (1, 234),
+        (3, 234),
+        (6, 234),
+        (9, 234),
+        (4, 345),
+        (5, 345),
+        (8, 345)
+;

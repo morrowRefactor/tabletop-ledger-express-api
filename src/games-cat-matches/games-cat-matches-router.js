@@ -1,60 +1,59 @@
 const express = require('express');
-const xss = require('xss');
 const path = require('path');
-const MechGamesService = require('./games-mech-service');
+const CatGameMatchesService = require('./games-cat-matches-service');
 
-const gamesMechRouter = express.Router();
+const gamesCatMatchesRouter = express.Router();
 const jsonParser = express.json();
 
-const serializeMechGames = game => ({
+const serializeCatGameMatches = game => ({
   id: game.id,
-  mech_id: game.mech_id,
-  name: xss(game.name)
+  cat_id: game.cat_id,
+  game_id: game.game_id
 });
 
-gamesMechRouter
+gamesCatMatchesRouter
   .route('/')
   .get((req, res, next) => {
     const knexInstance = req.app.get('db');
-    MechGamesService.getAllMechGames(knexInstance)
+    CatGameMatchesService.getAllCatGameMatches(knexInstance)
       .then(game => {
-        res.json(game.map(serializeMechGames))
+        res.json(game.map(serializeCatGameMatches))
       })
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { mech_id, name } = req.body;
-    const newMechGame = { mech_id, name };
+    const { cat_id, game_id } = req.body;
+    const newCatGameMatch = { cat_id, game_id };
 
-    for (const [key, value] of Object.entries(newMechGame))
+    for (const [key, value] of Object.entries(newCatGameMatch))
       if (value == null)
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` }
         });
-    MechGamesService.insertMechGame(
+    CatGameMatchesService.insertCatGameMatch(
       req.app.get('db'),
-      newMechGame
+      newCatGameMatch
     )
       .then(game => {
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${game.id}`))
-          .json(serializeMechGames(game));
+          .json(serializeCatGameMatches(game));
       })
       .catch(next)
   });
 
-gamesMechRouter
+gamesCatMatchesRouter
   .route('/:id')
   .all((req, res, next) => {
-    MechGamesService.getById(
+    CatGameMatchesService.getById(
       req.app.get('db'),
       req.params.id
     )
       .then(game => {
         if (!game) {
           return res.status(404).json({
-            error: { message: `Game mechanic doesn't exist` }
+            error: { message: `Game category match doesn't exist` }
           })
         }
         res.game = game
@@ -63,10 +62,10 @@ gamesMechRouter
       .catch(next)
   })
   .get((req, res, next) => {
-    res.json(serializeMechGames(res.game))
+    res.json(serializeCatGameMatches(res.game))
   })
   .delete((req, res, next) => {
-    MechGamesService.deleteMechGame(
+    CatGameMatchesService.deleteCatGameMatch(
       req.app.get('db'),
       req.params.id
     )
@@ -76,22 +75,22 @@ gamesMechRouter
       .catch(next)
   })
   .patch(jsonParser, (req, res, next) => {
-    const { mech_id, name } = req.body;
-    const newMechGame = { mech_id, name };
+    const { cat_id, game_id } = req.body;
+    const newCatGameMatch = { cat_id, game_id };
 
-    const numberOfValues = Object.values(newMechGame).filter(Boolean).length;
+    const numberOfValues = Object.values(newCatGameMatch).filter(Boolean).length;
     if (numberOfValues === 0) {
         return res.status(400).json({
         error: {
-          message: `Request body must contain a mechanic name and BGG ID`
+          message: `Request body must contain a category ID and game ID`
         }
       });
     };
 
-    MechGamesService.updateMechGame(
+    CatGameMatchesService.updateCatGameMatch(
         req.app.get('db'),
         req.params.id,
-        newMechGame
+        newCatGameMatch
       )
       .then(numRowsAffected => {
         res.status(204).end()
@@ -99,4 +98,4 @@ gamesMechRouter
       .catch(next)
   });
 
-module.exports = gamesMechRouter;
+module.exports = gamesCatMatchesRouter;
