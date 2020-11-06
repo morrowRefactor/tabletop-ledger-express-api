@@ -106,7 +106,7 @@ INSERT INTO game_tips (uid, game_id, tip)
         (5, 10, 'Always do X before Y')
 ;
 
-INSERT INTO badges_mech (name)
+INSERT INTO badges_mech (name, cat_id)
     VALUES
         ('Co-op beginner'),
         ('Co-op intermediate'),

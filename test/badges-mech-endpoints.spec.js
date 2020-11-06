@@ -62,7 +62,6 @@ describe('Mech Badges Endpoints', function() {
           .expect(200)
           .expect(res => {
             expect(res.body[0].name).to.eql(expectedMechBadge.name)
-            expect(res.body[0].mech_id).to.eql(expectedMechBadge.mech_id)
           })
       });
     });
@@ -111,7 +110,6 @@ describe('Mech Badges Endpoints', function() {
           .expect(200)
           .expect(res => {
             expect(res.body.name).to.eql(expectedMechBadge.name)
-            expect(res.body.mech_id).to.eql(expectedMechBadge.mech_id)
           })
       });
     });
@@ -121,8 +119,7 @@ describe('Mech Badges Endpoints', function() {
 
     it(`creates a badge, responding with 201 and the new badge`, () => {
       const newMechBadge = {
-        name: 'New badge',
-        mech_id: 1234
+        name: 'New badge'
       };
 
       return supertest(app)
@@ -131,7 +128,6 @@ describe('Mech Badges Endpoints', function() {
         .expect(201)
         .expect(res => {
           expect(res.body.name).to.eql(newMechBadge.name)
-          expect(res.body.mech_id).to.eql(newMechBadge.mech_id)
           expect(res.body).to.have.property('id')
           expect(res.headers.location).to.eql(`/api/badges-mech/${res.body.id}`)
         })
@@ -142,12 +138,11 @@ describe('Mech Badges Endpoints', function() {
         )
     });
 
-    const requiredFields = [ 'name', 'mech_id' ];
+    const requiredFields = [ 'name' ];
 
     requiredFields.forEach(field => {
         const newMechBadge = {
-            name: 'new badge',
-            mech_id: 1234
+            name: 'new badge'
         };
 
       it(`responds with 400 and an error message when the '${field}' is missing`, () => {
@@ -170,7 +165,6 @@ describe('Mech Badges Endpoints', function() {
         .expect(201)
         .expect(res => {
             expect(res.body.name).to.eql(expectedMechBadge.name)
-            expect(res.body.mech_id).to.eql(expectedMechBadge.mech_id)
         })
     });
   });
@@ -231,8 +225,7 @@ describe('Mech Badges Endpoints', function() {
       it('responds with 204 and updates the badge', () => {
         const idToUpdate = 2;
         const updateMechBadge = {
-          name: 'new badge name',
-          mech_id: 1234
+          name: 'new badge name'
         };
         const expectedMechBadge = {
           ...testMechBadges[idToUpdate - 1],
@@ -256,7 +249,7 @@ describe('Mech Badges Endpoints', function() {
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
-              message: `Request body must contain a badge name and mech id`
+              message: `Request body must contain a badge name`
             }
           })
       });
@@ -264,8 +257,7 @@ describe('Mech Badges Endpoints', function() {
       it(`responds with 204 when updating only a subset of fields`, () => {
         const idToUpdate = 2;
         const updateMechBadge = {
-            name: 'new badge name',
-            mech_id: 1234
+            name: 'new badge name'
         };
         const expectedMechBadge = {
           ...testMechBadges[idToUpdate - 1],

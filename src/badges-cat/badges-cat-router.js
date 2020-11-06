@@ -8,7 +8,6 @@ const jsonParser = express.json();
 
 const serializeCatBadges = badge => ({
   id: badge.id,
-  cat_id: badge.cat_id,
   name: xss(badge.name)
 });
 
@@ -23,8 +22,8 @@ badgesCatRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { name, cat_id } = req.body;
-    const newCatBadge = { name, cat_id };
+    const { name } = req.body;
+    const newCatBadge = { name };
 
     for (const [key, value] of Object.entries(newCatBadge))
       if (value == null)
@@ -76,14 +75,14 @@ badgesCatRouter
       .catch(next)
   })
   .patch(jsonParser, (req, res, next) => {
-    const { name, cat_id } = req.body;
-    const newCatBadge = { name, cat_id };
+    const { name } = req.body;
+    const newCatBadge = { name };
 
     const numberOfValues = Object.values(newCatBadge).filter(Boolean).length;
     if (numberOfValues === 0) {
         return res.status(400).json({
         error: {
-          message: `Request body must contain a badge name and category id`
+          message: `Request body must contain a badge name`
         }
       });
     };
