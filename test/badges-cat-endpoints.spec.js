@@ -119,6 +119,7 @@ describe('Category Badges Endpoints', function() {
 
     it(`creates a badge, responding with 201 and the new badge`, () => {
       const newCatBadge = {
+        cat_id: 1234,
         name: 'New badge'
       };
 
@@ -138,10 +139,11 @@ describe('Category Badges Endpoints', function() {
         )
     });
 
-    const requiredFields = [ 'name' ];
+    const requiredFields = [ 'name', 'cat_id' ];
 
     requiredFields.forEach(field => {
         const newCatBadge = {
+            cat_id: 1234,
             name: 'new badge'
         };
 
@@ -225,6 +227,7 @@ describe('Category Badges Endpoints', function() {
       it('responds with 204 and updates the badge', () => {
         const idToUpdate = 2;
         const updateCatBadge = {
+          cat_id: 1234,
           name: 'new badge name'
         };
         const expectedCatBadge = {
@@ -249,7 +252,7 @@ describe('Category Badges Endpoints', function() {
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
-              message: `Request body must contain a badge name`
+              message: `Request body must contain a badge name and category id`
             }
           })
       });
@@ -257,6 +260,7 @@ describe('Category Badges Endpoints', function() {
       it(`responds with 204 when updating only a subset of fields`, () => {
         const idToUpdate = 2;
         const updateCatBadge = {
+            cat_id: 1234,
             name: 'new badge name'
         };
         const expectedCatBadge = {

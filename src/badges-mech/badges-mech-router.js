@@ -8,6 +8,7 @@ const jsonParser = express.json();
 
 const serializeMechBadges = badge => ({
   id: badge.id,
+  mech_id: badge.mech_id,
   name: xss(badge.name)
 });
 
@@ -22,8 +23,8 @@ badgesMechRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { name } = req.body;
-    const newMechBadge = { name };
+    const { name, mech_id } = req.body;
+    const newMechBadge = { name, mech_id };
 
     for (const [key, value] of Object.entries(newMechBadge))
       if (value == null)
@@ -75,14 +76,14 @@ badgesMechRouter
       .catch(next)
   })
   .patch(jsonParser, (req, res, next) => {
-    const { name } = req.body;
-    const newMechBadge = { name };
+    const { name, mech_id } = req.body;
+    const newMechBadge = { name, mech_id };
 
     const numberOfValues = Object.values(newMechBadge).filter(Boolean).length;
     if (numberOfValues === 0) {
         return res.status(400).json({
         error: {
-          message: `Request body must contain a badge name`
+          message: `Request body must contain a badge name and mech id`
         }
       });
     };
