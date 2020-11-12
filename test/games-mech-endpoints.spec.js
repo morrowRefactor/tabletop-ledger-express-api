@@ -53,7 +53,7 @@ describe('Game Mechanics Endpoints', function() {
       beforeEach('insert malicious Game mechanic', () => {
         return db
             .into('games_mech')
-            .insert(maliciousMechGame)
+            .insert(maliciousMechGame[0])
       });
 
       it('removes XSS attack content', () => {
@@ -61,8 +61,8 @@ describe('Game Mechanics Endpoints', function() {
           .get(`/api/games-mech`)
           .expect(200)
           .expect(res => {
-            expect(res.body[0].name).to.eql(expectedMechGame.name)
-            expect(res.body[0].mech_id).to.eql(expectedMechGame.mech_id)
+            expect(res.body[0].name).to.eql(expectedMechGame[0].name)
+            expect(res.body[0].mech_id).to.eql(expectedMechGame[0].mech_id)
           })
       });
     });
@@ -102,16 +102,16 @@ describe('Game Mechanics Endpoints', function() {
         beforeEach('insert malicious category', () => {
           return db
             .into('games_mech')
-            .insert(maliciousMechGame)
+            .insert(maliciousMechGame[0])
         });
 
       it('removes XSS attack content', () => {
         return supertest(app)
-          .get(`/api/games-mech/${maliciousMechGame.id}`)
+          .get(`/api/games-mech/${maliciousMechGame[0].id}`)
           .expect(200)
           .expect(res => {
-            expect(res.body.name).to.eql(expectedMechGame.name)
-            expect(res.body.mech_id).to.eql(expectedMechGame.mech_id)
+            expect(res.body.name).to.eql(expectedMechGame[0].name)
+            expect(res.body.mech_id).to.eql(expectedMechGame[0].mech_id)
           })
       });
     });
@@ -120,38 +120,33 @@ describe('Game Mechanics Endpoints', function() {
   describe(`POST /api/games-mech`, () => {
 
     it(`creates a mechanic, responding with 201 and the new mechanic`, () => {
-      const newMechGame = {
-        name: 'New mech',
-        mech_id: 567
-      };
+      const newMechGame = [
+        {
+          name: 'New mech',
+          mech_id: 567
+        },
+        {
+          name: 'Another new mech',
+          mech_id: 888
+        }
+      ];
 
       return supertest(app)
         .post('/api/games-mech')
         .send(newMechGame)
         .expect(201)
-        .expect(res => {
-          expect(res.body.name).to.eql(newMechGame.name)
-          expect(res.body.mech_id).to.eql(newMechGame.mech_id)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/games-mech/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/games-mech/${res.body.id}`)
-            .expect(res.body)
-        )
     });
-
+    
     const requiredFields = [ 'name', 'mech_id' ];
 
     requiredFields.forEach(field => {
-        const newMechGame = {
+        const newMechGame = [{
             name: 'new mech',
             mech_id: 567
-        };
+        }];
 
       it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newMechGame[field]
+        delete newMechGame[0][field]
 
         return supertest(app)
           .post('/api/games-mech')
@@ -161,17 +156,13 @@ describe('Game Mechanics Endpoints', function() {
           })
       });
     });
-
+    
     it('removes XSS attack content from response', () => {
-      const { maliciousMechGame, expectedMechGame } = makeMaliciousMechGames();
+      const { maliciousMechGame } = makeMaliciousMechGames();
       return supertest(app)
         .post(`/api/games-mech`)
         .send(maliciousMechGame)
         .expect(201)
-        .expect(res => {
-            expect(res.body.name).to.eql(expectedMechGame.name)
-            expect(res.body.mech_id).to.eql(expectedMechGame.mech_id)
-        })
     });
   });
 

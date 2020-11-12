@@ -120,38 +120,33 @@ describe('Game Category Matches Endpoints', function() {
     });
 
     it(`creates a game category match, responding with 201 and the new game category match`, () => {
-      const newCatGameMatch = {
-        cat_id: 123,
-        game_id: 10
-      };
+      const newCatGameMatch = [
+        {
+          cat_id: 123,
+          game_id: 10
+        },
+        {
+          cat_id: 234,
+          game_id: 7
+        }
+      ];
 
       return supertest(app)
         .post('/api/games-cat-matches')
         .send(newCatGameMatch)
         .expect(201)
-        .expect(res => {
-          expect(res.body.cat_id).to.eql(newCatGameMatch.cat_id)
-          expect(res.body.game_id).to.eql(newCatGameMatch.game_id)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/games-cat-matches/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/games-cat-matches/${res.body.id}`)
-            .expect(res.body)
-        )
     });
 
     const requiredFields = [ 'cat_id', 'game_id' ];
 
     requiredFields.forEach(field => {
-        const newCatGameMatch = {
+        const newCatGameMatch = [{
             cat_id: 345,
             game_id: 10
-        };
+        }];
 
       it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newCatGameMatch[field]
+        delete newCatGameMatch[0][field]
 
         return supertest(app)
           .post('/api/games-cat-matches')

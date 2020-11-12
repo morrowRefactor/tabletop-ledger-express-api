@@ -19,17 +19,17 @@ function makeCatGamesArray() {
 };
 
 function makeMaliciousCatGames() {
-    const maliciousCatGame = {
+    const maliciousCatGame = [{
         id: 911,
         cat_id: 123,
         name: 'Naughty naughty very naughty <script>alert("xss");</script>'
-    };
-    const expectedCatGame = {
+    }];
+    const expectedCatGame = [{
         ...maliciousCatGame,
         uid: 1,
         cat_id: 123,
         name: 'Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;'
-    };
+    }];
     return {
         maliciousCatGame,
         expectedCatGame

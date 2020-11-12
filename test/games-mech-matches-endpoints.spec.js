@@ -5,7 +5,7 @@ const { makeMechGameMatchesArray } = require('./games-mech-matches.fixtures');
 const { makeGamesArray } = require('./games.fixtures');
 const { makeMechGamesArray}  = require('./games-mech.fixtures');
 
-describe.only('Game Mechanic Matches Endpoints', function() {
+describe('Game Mechanic Matches Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
@@ -119,38 +119,33 @@ describe.only('Game Mechanic Matches Endpoints', function() {
     });
 
     it(`creates a game category match, responding with 201 and the new game category match`, () => {
-      const newMechGameMatch = {
-        mech_id: 123,
-        game_id: 10
-      };
+      const newMechGameMatch = [
+        {
+          mech_id: 123,
+          game_id: 10
+        },
+        {
+          mech_id: 234,
+          game_id: 7
+        }
+      ];
 
       return supertest(app)
         .post('/api/games-mech-matches')
         .send(newMechGameMatch)
         .expect(201)
-        .expect(res => {
-          expect(res.body.mech_id).to.eql(newMechGameMatch.mech_id)
-          expect(res.body.game_id).to.eql(newMechGameMatch.game_id)
-          expect(res.body).to.have.property('id')
-          expect(res.headers.location).to.eql(`/api/games-mech-matches/${res.body.id}`)
-        })
-        .then(res =>
-          supertest(app)
-            .get(`/api/games-mech-matches/${res.body.id}`)
-            .expect(res.body)
-        )
     });
 
     const requiredFields = [ 'mech_id', 'game_id' ];
 
     requiredFields.forEach(field => {
-        const newMechGameMatch = {
+        const newMechGameMatch = [{
             mech_id: 345,
             game_id: 10
-        };
+        }];
 
       it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-        delete newMechGameMatch[field]
+        delete newMechGameMatch[0][field]
 
         return supertest(app)
           .post('/api/games-mech-matches')

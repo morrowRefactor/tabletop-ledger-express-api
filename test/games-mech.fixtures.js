@@ -19,17 +19,17 @@ function makeMechGamesArray() {
 };
 
 function makeMaliciousMechGames() {
-    const maliciousMechGame = {
+    const maliciousMechGame = [{
         id: 911,
         mech_id: 123,
         name: 'Naughty naughty very naughty <script>alert("xss");</script>'
-    };
-    const expectedMechGame = {
+    }];
+    const expectedMechGame = [{
         ...maliciousMechGame,
         uid: 1,
         mech_id: 123,
         name: 'Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;'
-    };
+    }];
     return {
         maliciousMechGame,
         expectedMechGame

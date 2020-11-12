@@ -22,25 +22,39 @@ gamesCatMatchesRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { cat_id, game_id } = req.body;
-    const newCatGameMatch = { cat_id, game_id };
+    const newGameCatMatches = req.body;
+    let insertCount = 0;
 
-    for (const [key, value] of Object.entries(newCatGameMatch))
-      if (value == null)
-        return res.status(400).json({
-          error: { message: `Missing '${key}' in request body` }
-        });
-    CatGameMatchesService.insertCatGameMatch(
-      req.app.get('db'),
-      newCatGameMatch
-    )
-      .then(game => {
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${game.id}`))
-          .json(serializeCatGameMatches(game));
-      })
-      .catch(next)
+    newGameCatMatches.forEach(game => {
+      const { cat_id, game_id } = game;
+      const gameCatMatchReqs = { cat_id, game_id };
+
+      for (const [key, value] of Object.entries(gameCatMatchReqs))
+        if (value == null)
+          return res.status(400).json({
+            error: { message: `Missing '${key}' in request body` }
+          });
+    })
+    
+    newGameCatMatches.forEach(game => {
+      const newCatMatch = {
+        cat_id: game.cat_id,
+        game_id: game.game_id
+      };
+
+      CatGameMatchesService.insertCatGameMatch(
+        req.app.get('db'),
+        newCatMatch
+      );
+
+      insertCount++;
+    });
+
+    if(insertCount === newGameCatMatches.length) {
+      return res
+        .status(201)
+        .end()
+    }
   });
 
 gamesCatMatchesRouter

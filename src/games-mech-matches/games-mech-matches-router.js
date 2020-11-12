@@ -22,25 +22,39 @@ gamesMechMatchesRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { mech_id, game_id } = req.body;
-    const newMechGameMatch = { mech_id, game_id };
+    const newGameMechMatch = req.body;
+    let insertCount = 0;
 
-    for (const [key, value] of Object.entries(newMechGameMatch))
+    newGameMechMatch.forEach(game => {
+      const { mech_id, game_id } = game;
+      const gameMechMatchReqs = { mech_id, game_id };
+
+    for (const [key, value] of Object.entries(gameMechMatchReqs))
       if (value == null)
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` }
         });
-    MechGameMatchesService.insertMechGameMatch(
-      req.app.get('db'),
-      newMechGameMatch
-    )
-      .then(game => {
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${game.id}`))
-          .json(serializeMechGameMatches(game));
-      })
-      .catch(next)
+    })
+    
+    newGameMechMatch.forEach(game => {
+      const newMechMatch = {
+        mech_id: game.mech_id,
+        game_id: game.game_id
+      };
+
+      MechGameMatchesService.insertMechGameMatch(
+        req.app.get('db'),
+        newMechMatch
+      );
+
+      insertCount++;
+    })
+
+    if(insertCount === newGameMechMatch.length) {
+      return res  
+        .status(201)
+        .end()
+    }
   });
 
 gamesMechMatchesRouter

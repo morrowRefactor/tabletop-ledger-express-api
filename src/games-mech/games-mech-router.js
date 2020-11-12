@@ -23,25 +23,40 @@ gamesMechRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { mech_id, name } = req.body;
-    const newMechGame = { mech_id, name };
+    const newGameMech = req.body;
+    let insertCount = 0;
+    console.log(newGameMech)
 
-    for (const [key, value] of Object.entries(newMechGame))
-      if (value == null)
-        return res.status(400).json({
-          error: { message: `Missing '${key}' in request body` }
-        });
-    MechGamesService.insertMechGame(
-      req.app.get('db'),
-      newMechGame
-    )
-      .then(game => {
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${game.id}`))
-          .json(serializeMechGames(game));
-      })
-      .catch(next)
+    newGameMech.forEach(game => {
+      const { mech_id, name } = game;
+      const gameMechReqs = { mech_id, name };
+
+      for (const [key, value] of Object.entries(gameMechReqs))
+        if (value == null)
+          return res.status(400).json({
+            error: { message: `Missing '${key}' in request body` }
+          });
+    })
+    
+    newGameMech.forEach(game => {
+      const gameMech = {
+        mech_id: game.mech_id,
+        name: game.name
+      };
+
+      MechGamesService.insertMechGame(
+        req.app.get('db'),
+        gameMech
+      )
+
+      insertCount++;
+    })
+    
+    if(insertCount === newGameMech.length) {
+      return res
+        .status(201)
+        .end()
+    }
   });
 
 gamesMechRouter

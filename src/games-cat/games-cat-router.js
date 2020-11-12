@@ -23,25 +23,38 @@ gamesCatRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { cat_id, name } = req.body;
-    const newCatGame = { cat_id, name };
+    const newGamesCat = req.body;
+    let insertCount = 0;
+    
+    newGamesCat.forEach(game => {
+      const { cat_id, name } = game;
+      const gamesCatReqs = { cat_id, name };
 
-    for (const [key, value] of Object.entries(newCatGame))
+      for (const [key, value] of Object.entries(gamesCatReqs))
       if (value == null)
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` }
         });
-    CatGamesService.insertCatGame(
-      req.app.get('db'),
-      newCatGame
-    )
-      .then(game => {
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${game.id}`))
-          .json(serializeCatGames(game));
-      })
-      .catch(next)
+    })
+    
+    newGamesCat.forEach(game => {
+      const gameCat = {
+        cat_id: game.cat_id,
+        name: game.name
+      };
+
+      CatGamesService.insertCatGame(
+        req.app.get('db'),
+        gameCat
+      );
+
+      insertCount++;
+    });
+
+    if(insertCount === newGamesCat.length) {
+      return res
+        .status(201).end()
+    }
   });
 
 gamesCatRouter
