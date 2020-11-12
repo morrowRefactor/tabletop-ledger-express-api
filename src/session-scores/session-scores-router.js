@@ -28,6 +28,7 @@ sessionScoresRouter
   })
   .post(jsonParser, (req, res, next) => {
     const newSessionScores = req.body;
+    let insertCount = 0;
 
     newSessionScores.forEach(sess => {
       const { session_id, game_id, score, name, winner } = sess;
@@ -40,31 +41,29 @@ sessionScoresRouter
       });
     });
 
-    const promise = new Promise(function (resolve) {
-      newSessionScores.forEach(sess => {
-        const sessScore = {
-          session_id: sess.session_id,
-          game_id: sess.game_id,
-          uid: sess.uid,
-          score: sess.score,
-          name: sess.name,
-          winner: sess.winner
-        };
+    newSessionScores.forEach(sess => {
+      const sessScore = {
+        session_id: sess.session_id,
+        game_id: sess.game_id,
+        uid: sess.uid,
+        score: sess.score,
+        name: sess.name,
+        winner: sess.winner
+      };
 
-        SessionScoresService.insertScores(
-          req.app.get('db'),
-          sessScore
-        )
-      })
-      
-      return resolve();
+      SessionScoresService.insertScores(
+        req.app.get('db'),
+        sessScore
+      );
+
+      insertCount++;
     });
-    
-    promise.then(()=> {
-        return res
-          .status(201)
-    })
-    .catch(next)
+
+    if(insertCount === newSessionScores.length) {
+      return res
+        .status(201)
+        .end()
+    }
   });
 
 sessionScoresRouter

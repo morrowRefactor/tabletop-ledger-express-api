@@ -91,7 +91,7 @@ describe('Session Scores Endpoints', function() {
           .then(() => {
               return db
                 .into('session_scores')
-                .insert(maliciousSessionScore)
+                .insert(maliciousSessionScore[0])
           })
       });
 
@@ -100,7 +100,7 @@ describe('Session Scores Endpoints', function() {
           .get(`/api/session-scores`)
           .expect(200)
           .expect(res => {
-            expect(res.body[0].name).to.eql(expectedSessionScore.name)
+            expect(res.body[0].name).to.eql(expectedSessionScore[0].name)
           })
       });
     });
@@ -175,16 +175,16 @@ describe('Session Scores Endpoints', function() {
             .then(() => {
                 return db
                   .into('session_scores')
-                  .insert(maliciousSessionScore)
+                  .insert(maliciousSessionScore[0])
             })
         });
 
       it('removes XSS attack content', () => {
         return supertest(app)
-          .get(`/api/session-scores/${maliciousSessionScore.id}`)
+          .get(`/api/session-scores/${maliciousSessionScore[0].id}`)
           .expect(200)
           .expect(res => {
-            expect(res.body.name).to.eql(expectedSessionScore.name)
+            expect(res.body.name).to.eql(expectedSessionScore[0].name)
           })
       });
     });
