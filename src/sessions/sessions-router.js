@@ -104,20 +104,26 @@ sessionsRouter
   sessionsRouter
     .route('/user-sessions/:uid')
     .all((req, res, next) => {
-      SessionsService.getUserSessions(
-        req.app.get('db'),
-        req.params.uid
-      )
-        .then(sess => {
-          if (!sess || sess.length < 1) {
-            return res.status(404).json({
-              error: { message: `User sessions don't exist` }
-            })
-          }
-          res.sess = sess
-          next()
-        })
-        .catch(next)
+      const returnArr = [];
+      if(req.params.uid === '0') {
+        res.status(200).json(returnArr)
+      }
+      else {
+        SessionsService.getUserSessions(
+          req.app.get('db'),
+          req.params.uid
+        )
+          .then(sess => {
+            if (!sess || sess.length < 1) {
+              return res.status(404).json({
+                error: { message: `User sessions don't exist` }
+              })
+            }
+            res.sess = sess
+            next()
+          })
+          .catch(next)
+      }
     })
     .get((req, res, next) => {
       res.json(res.sess)
@@ -126,8 +132,9 @@ sessionsRouter
     sessionsRouter
     .route('/game-sessions/:game_id')
     .all((req, res, next) => {
+      const returnArr = [];
       if(req.params.game_id === '0') {
-        res.status(200).end();
+        res.status(200).json(returnArr)
       }
       else {
         SessionsService.getSessionsByGame(

@@ -25,4 +25,10 @@ ALTER TABLE user_badges_cat
 ALTER TABLE user_standings
     DROP COLUMN uid;
 
+ALTER TABLE user_game_cat_logs
+    DROP COLUMN uid;
+
+ALTER TABLE user_game_mech_logs
+    DROP COLUMN uid;
+
 DROP TABLE IF EXISTS users; 

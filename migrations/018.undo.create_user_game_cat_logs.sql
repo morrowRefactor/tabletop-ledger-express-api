@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS user_game_cat_logs;

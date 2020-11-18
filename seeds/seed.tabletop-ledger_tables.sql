@@ -1,22 +1,3 @@
-BEGIN;
-
-TRUNCATE
-  user_standings,
-  user_badges_cat,
-  user_badges_mech,
-  badges_cat,
-  badges_mech,
-  game_tips,
-  user_games,
-  user_reccos,
-  session_notes,
-  session_scores,
-  sessions,
-  games,
-  users
-    RESTART IDENTITY CASCADE
-;
-
 INSERT INTO games (title, bgg_id, bgg_rating, description, image)
   VALUES
     ('Gloomhaven', 174430, 8.2, 'Gloomhaven  is a game of Euro-inspired tactical combat in a persistent world of shifting motives. Players will take on the role of a wandering adventurer with their own special set of skills and their own reasons for traveling to this dark corner of the world.', 'https://cf.geekdo-images.com/original/img/lDN358RgcYvQfYYN6Oy2TXpifyM=/0x0/pic2437871.jpg'),
@@ -40,18 +21,18 @@ INSERT INTO users (name, about, joined_date, password)
         ('Patrick Marleau', 'I am a gaming enthusiast', '2020-07-30', 'something')
 ;
 
-INSERT INTO sessions (game_id, uid, date)
+INSERT INTO sessions (game_id, uid, date, name)
     VALUES
-        (1, 2, '2020-08-25'),
-        (1, 2, '2020-08-04'),
-        (1, 2, '2020-07-29'),
-        (3, 1, '2020-07-29'),
-        (3, 4, '2020-09-02'),
-        (1, 2, '2020-06-29'),
-        (1, 4, '2020-06-30'),
-        (4, 3, '2020-04-23'),
-        (7, 5, '2020-06-01'),
-        (10, 1, '2020-03-02')
+        (1, 2, '2020-08-25', ''),
+        (1, 2, '2020-08-04', 'That game'),
+        (1, 2, '2020-07-29', ''),
+        (3, 1, '2020-07-29', 'Great game today'),
+        (3, 4, '2020-09-02', ''),
+        (1, 2, '2020-06-29', ''),
+        (1, 4, '2020-06-30', ''),
+        (4, 3, '2020-04-23', 'Redemption'),
+        (7, 5, '2020-06-01', ''),
+        (10, 1, '2020-03-02', '')
 ;
 
 INSERT INTO session_scores (session_id, game_id, uid, score, name, winner)
@@ -106,7 +87,7 @@ INSERT INTO game_tips (uid, game_id, tip)
         (5, 10, 'Always do X before Y')
 ;
 
-INSERT INTO badges_mech (name, cat_id)
+INSERT INTO badges_mech (name)
     VALUES
         ('Co-op beginner'),
         ('Co-op intermediate'),
@@ -201,4 +182,31 @@ INSERT INTO games_mech_matches (game_id, mech_id)
         (4, 345),
         (5, 345),
         (8, 345)
+;
+
+INSERT INTO user_game_cat_logs (uid, cat_id, sessions)
+    VALUES  
+        (1, 123, 5),
+        (1, 234, 2),
+        (2, 123, 10),
+        (2, 345, 6),
+        (3, 123, 10),
+        (4, 234, 6),
+        (4, 345, 8),
+        (5, 123, 4),
+        (5, 234, 7),
+        (5, 345, 9)
+;
+
+INSERT INTO user_game_mech_logs (uid, mech_id, sessions)
+    VALUES
+        (1, 123, 4),
+        (1, 234, 6),
+        (1, 345, 9),
+        (2, 123, 4),
+        (3, 234, 10),
+        (3, 345, 8),
+        (4, 123, 1),
+        (4, 345, 8),
+        (5, 123, 7)
 ;

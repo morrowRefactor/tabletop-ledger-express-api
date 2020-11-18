@@ -16,6 +16,12 @@ ALTER TABLE user_games
 ALTER TABLE game_tips
     DROP COLUMN game_id;
 
+ALTER TABLE games_cat_matches
+    DROP COLUMN game_id;
+
+ALTER TABLE games_mech_matches
+    DROP COLUMN game_id;
+
 DROP TABLE IF EXISTS games; 
 
 ALTER TABLE sessions
@@ -43,6 +49,12 @@ ALTER TABLE user_badges_cat
     DROP COLUMN uid;
 
 ALTER TABLE user_standings
+    DROP COLUMN uid;
+
+ALTER TABLE user_game_cat_logs
+    DROP COLUMN uid;
+
+ALTER TABLE user_game_mech_logs
     DROP COLUMN uid;
 
 DROP TABLE IF EXISTS users; 
@@ -83,12 +95,28 @@ DROP TABLE IF EXISTS user_badges_cat;
 
 DROP TABLE IF EXISTS user_standings;
 
+ALTER TABLE games_cat_matches
+    DROP COLUMN cat_id;
+
+ALTER TABLE user_game_cat_logs
+    DROP COLUMN cat_id;
+
 DROP TABLE IF EXISTS games_cat; 
+
+ALTER TABLE games_mech_matches
+    DROP COLUMN mech_id;
+
+ALTER TABLE user_game_mech_logs
+    DROP COLUMN mech_id;
 
 DROP TABLE IF EXISTS games_mech; 
 
 DROP TABLE IF EXISTS games_cat_matches;
 
 DROP TABLE IF EXISTS games_mech_matches;
+
+DROP TABLE IF EXISTS user_game_cat_logs;
+
+DROP TABLE IF EXISTS user_game_mech_logs;
 
 DROP TABLE IF EXISTS schemaversion;

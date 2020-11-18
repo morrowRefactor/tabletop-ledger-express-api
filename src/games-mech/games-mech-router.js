@@ -25,7 +25,6 @@ gamesMechRouter
   .post(jsonParser, (req, res, next) => {
     const newGameMech = req.body;
     let insertCount = 0;
-    console.log(newGameMech)
 
     newGameMech.forEach(game => {
       const { mech_id, name } = game;

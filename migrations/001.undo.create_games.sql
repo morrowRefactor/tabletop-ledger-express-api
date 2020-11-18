@@ -16,4 +16,10 @@ ALTER TABLE user_games
 ALTER TABLE game_tips
     DROP COLUMN game_id;
 
+ALTER TABLE games_cat_matches
+    DROP COLUMN game_id;
+
+ALTER TABLE games_mech_matches
+    DROP COLUMN game_id;
+
 DROP TABLE IF EXISTS games; 
