@@ -4,6 +4,7 @@ const UserGamesByCatLogsService = require('./user-game-cat-logs-service');
 
 const userGamesByCatLogsRouter = express.Router();
 const jsonParser = express.json();
+let patchDB;
 
 const serializeUserGameCatLogs = log => ({
   id: log.id,
@@ -91,14 +92,14 @@ userGamesByCatLogsRouter
       .catch(next)
   })
   .patch(jsonParser, (req, res, next) => {
-    const { cat_id, uid, sessions } = req.body;
-    const newUserGameCatLog = { cat_id, uid, sessions };
+    const { uid, cat_id, sessions } = req.body;
+    const userCatLogToUpdate = { uid, cat_id, sessions };
 
-    const numberOfValues = Object.values(newUserGameCatLog).filter(Boolean).length;
+    const numberOfValues = Object.values(userCatLogToUpdate).filter(Boolean).length;
     if (numberOfValues === 0) {
         return res.status(400).json({
         error: {
-          message: `Request body must contain a category ID, user ID, and number of sessions`
+          message: `Request body must contain a user ID, category ID, and session number`
         }
       });
     };
@@ -106,7 +107,7 @@ userGamesByCatLogsRouter
     UserGamesByCatLogsService.updateUserGameCatLog(
         req.app.get('db'),
         req.params.id,
-        newUserGameCatLog
+        userCatLogToUpdate
       )
       .then(numRowsAffected => {
         res.status(204).end()

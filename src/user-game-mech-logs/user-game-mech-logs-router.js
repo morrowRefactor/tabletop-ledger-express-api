@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const UserGamesByCatLogsService = require('../user-game-cat-logs/user-game-cat-logs-service');
 const UserGamesByMechLogsService = require('./user-game-mech-logs-service');
 
 const userGamesByMechLogsRouter = express.Router();
@@ -91,14 +92,14 @@ userGamesByMechLogsRouter
       .catch(next)
   })
   .patch(jsonParser, (req, res, next) => {
-    const { mech_id, uid, sessions } = req.body;
-    const newUserGameMechLog = { mech_id, uid, sessions };
+    const { uid, mech_id, sessions } = req.body;
+    const userMechLogToUpdate = { uid, mech_id, sessions };
 
-    const numberOfValues = Object.values(newUserGameMechLog).filter(Boolean).length;
+    const numberOfValues = Object.values(userMechLogToUpdate).filter(Boolean).length;
     if (numberOfValues === 0) {
         return res.status(400).json({
         error: {
-          message: `Request body must contain a mechanic ID, user ID, and number of sessions`
+          message: `Request body must contain a user ID, mechanic ID, and session number`
         }
       });
     };
@@ -106,7 +107,7 @@ userGamesByMechLogsRouter
     UserGamesByMechLogsService.updateUserGameMechLog(
         req.app.get('db'),
         req.params.id,
-        newUserGameMechLog
+        userMechLogToUpdate
       )
       .then(numRowsAffected => {
         res.status(204).end()

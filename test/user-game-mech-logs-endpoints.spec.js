@@ -4,8 +4,9 @@ const { expect } = require('chai');
 const { makeUserGameMechLogsArray } = require('./user-game-mech-logs.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeMechGamesArray }  = require('./games-mech.fixtures');
+const { updateUserGameCatLog } = require('../src/user-game-cat-logs/user-game-cat-logs-service');
 
-describe.only('User Sessions by Game Mechanic Endpoints', function() {
+describe('User Sessions by Game Mechanic Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
@@ -206,7 +207,7 @@ describe.only('User Sessions by Game Mechanic Endpoints', function() {
     });
   });
 
-  describe(`PATCH /api/user-game-mech-logs/:id`, () => {
+  describe(`PATCH /api/user-game-mech-logs`, () => {
     context(`Given no user game sessions by mechanic`, () => {
       it(`responds with 404`, () => {
         const id = 222;
@@ -238,64 +239,37 @@ describe.only('User Sessions by Game Mechanic Endpoints', function() {
       });
 
       it('responds with 204 and updates the user games by mechanic log', () => {
-        const idToUpdate = 2;
-        const updateUserGameMechLog = {
-          mech_id: 345,
+        const updateUserGameMechLog = [{
+          id: 1,
+          mech_id: 123,
+          uid: 1,
+          sessions: 6
+        },
+        {
+          id: 2,
+          mech_id: 234,
           uid: 1,
           sessions: 4
-        };
-        const expectedUserGameMechLog = {
-          ...testUserGameMechLogs[idToUpdate - 1],
-          ...updateUserGameMechLog
-        };
+        }];
         
-        return supertest(app)
-          .patch(`/api/user-game-mech-logs/${idToUpdate}`)
-          .send(updateUserGameMechLog)
+        updateUserGameMechLog.forEach(log => {
+          return supertest(app)
+          .patch(`/api/user-game-mech-logs/${log.id}`)
+          .send(log)
           .expect(204)
-          .then(res =>
-            supertest(app)
-              .get(`/api/user-game-mech-logs/${idToUpdate}`)
-              .expect(expectedUserGameMechLog)
-          )
+        })
       });
 
       it(`responds with 400 when no required fields supplied`, () => {
-        const idToUpdate = 2
+        const idToUpdate = 2;
         return supertest(app)
           .patch(`/api/user-game-mech-logs/${idToUpdate}`)
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
-              message: `Request body must contain a mechanic ID, user ID, and number of sessions`
+              message: `Request body must contain a user ID, mechanic ID, and session number`
             }
           })
-      });
-
-      it(`responds with 204 when updating only a subset of fields`, () => {
-        const idToUpdate = 2;
-        const updateUserGameMechLog = {
-            mech_id: 345,
-            uid: 1,
-            sessions: 4
-        };
-        const expectedUserGameMechLog = {
-          ...testUserGameMechLogs[idToUpdate - 1],
-          ...updateUserGameMechLog
-        };
-
-        return supertest(app)
-          .patch(`/api/user-game-mech-logs/${idToUpdate}`)
-          .send({
-            ...updateUserGameMechLog,
-            fieldToIgnore: 'should not be in GET response'
-          })
-          .expect(204)
-          .then(res =>
-            supertest(app)
-              .get(`/api/user-game-mech-logs/${idToUpdate}`)
-              .expect(expectedUserGameMechLog)
-          )
       });
     });
     });
