@@ -25,10 +25,11 @@ sessionsRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { game_id, uid, date } = req.body;
-    const newSession = { game_id, uid, date };
+    const { game_id, uid, date, name } = req.body;
+    const newSession = { game_id, uid, date, name };
+    const newSessReqs = { game_id, uid, date };
 
-    for (const [key, value] of Object.entries(newSession))
+    for (const [key, value] of Object.entries(newSessReqs))
       if (value == null)
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` }
