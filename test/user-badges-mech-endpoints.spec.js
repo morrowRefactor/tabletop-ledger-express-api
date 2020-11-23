@@ -4,6 +4,7 @@ const { expect } = require('chai');
 const { makeUserBadgesMechArray } = require('./user-badges-mech.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeMechBadgesArray } = require('./badges-mech.fixtures');
+const { makeBadgeTiersArray } = require('./badge-tiers.fixtures');
 
 describe('User Mech Badges Endpoints', function() {
   let db;
@@ -20,9 +21,9 @@ describe('User Mech Badges Endpoints', function() {
 
   after('disconnect from db', () => db.destroy());
 
-  before('clean the table', () => db.raw('TRUNCATE users, badges_mech, user_badges_mech RESTART IDENTITY CASCADE'));
+  before('clean the table', () => db.raw('TRUNCATE users, badges_mech, badge_tiers, user_badges_mech RESTART IDENTITY CASCADE'));
 
-  afterEach('cleanup',() => db.raw('TRUNCATE users, badges_mech, user_badges_mech RESTART IDENTITY CASCADE'));
+  afterEach('cleanup',() => db.raw('TRUNCATE users, badges_mech, badge_tiers, user_badges_mech RESTART IDENTITY CASCADE'));
 
   describe(`GET /api/user-badges-mech`, () => {
     context(`Given no user mech badges`, () => {
@@ -36,6 +37,7 @@ describe('User Mech Badges Endpoints', function() {
     context('Given there are user mech badges in the database', () => {
       const testUsers = makeUsersArray();
       const testMechBadges = makeMechBadgesArray();
+      const testBadgeTiers = makeBadgeTiersArray();
       const testUserMechBadges = makeUserBadgesMechArray();
 
       beforeEach('insert user mech badges', () => {
@@ -46,6 +48,11 @@ describe('User Mech Badges Endpoints', function() {
                 return db
                     .into('badges_mech')
                     .insert(testMechBadges)
+            })
+            .then(() => {
+              return db
+                  .into('badge_tiers')
+                  .insert(testBadgeTiers)
             })
             .then(() => {
                 return db
@@ -75,6 +82,7 @@ describe('User Mech Badges Endpoints', function() {
     context('Given there are badges in the database', () => {
         const testUsers = makeUsersArray();
         const testMechBadges = makeMechBadgesArray();
+        const testBadgeTiers = makeBadgeTiersArray();
         const testUserMechBadges = makeUserBadgesMechArray();
 
         beforeEach('insert user mech badges', () => {
@@ -85,6 +93,11 @@ describe('User Mech Badges Endpoints', function() {
                     return db
                         .into('badges_mech')
                         .insert(testMechBadges)
+                })
+                .then(() => {
+                  return db
+                      .into('badge_tiers')
+                      .insert(testBadgeTiers)
                 })
                 .then(() => {
                     return db
@@ -108,6 +121,7 @@ describe('User Mech Badges Endpoints', function() {
     context('Given there are user mech badges in the database', () => {
       const testUsers = makeUsersArray();
       const testMechBadges = makeMechBadgesArray();
+      const testBadgeTiers = makeBadgeTiersArray();
 
       beforeEach('insert user mech badges', () => {
         return db
@@ -118,12 +132,18 @@ describe('User Mech Badges Endpoints', function() {
                     .into('badges_mech')
                     .insert(testMechBadges)
             })
+            .then(() => {
+              return db
+                  .into('badge_tiers')
+                  .insert(testBadgeTiers)
+            })
       });
 
       it(`creates a badge, responding with 201 and the new badge`, () => {
         const newUserMechBadge = {
           uid: 4,
-          badge_id: 3
+          badge_id: 3,
+          tier_id: 3
         };
 
         return supertest(app)
@@ -133,6 +153,7 @@ describe('User Mech Badges Endpoints', function() {
           .expect(res => {
             expect(res.body.uid).to.eql(newUserMechBadge.uid)
             expect(res.body.badge_id).to.eql(newUserMechBadge.badge_id)
+            expect(res.body.tier_id).to.eql(newUserMechBadge.tier_id)
             expect(res.body).to.have.property('id')
             expect(res.headers.location).to.eql(`/api/user-badges-mech/${res.body.id}`)
           })
@@ -143,7 +164,7 @@ describe('User Mech Badges Endpoints', function() {
           )
       });
 
-      const requiredFields = [ 'uid', 'badge_id' ];
+      const requiredFields = [ 'uid', 'badge_id', 'tier_id' ];
 
       requiredFields.forEach(field => {
           const newUserMechBadge = {
@@ -178,6 +199,7 @@ describe('User Mech Badges Endpoints', function() {
     context('Given there are user mech badges in the database', () => {
         const testUsers = makeUsersArray();
         const testMechBadges = makeMechBadgesArray();
+        const testBadgeTiers = makeBadgeTiersArray();
         const testUserMechBadges = makeUserBadgesMechArray();
 
         beforeEach('insert user mech badges', () => {
@@ -188,6 +210,11 @@ describe('User Mech Badges Endpoints', function() {
                     return db
                         .into('badges_mech')
                         .insert(testMechBadges)
+                })
+                .then(() => {
+                  return db
+                      .into('badge_tiers')
+                      .insert(testBadgeTiers)
                 })
                 .then(() => {
                     return db
@@ -224,6 +251,7 @@ describe('User Mech Badges Endpoints', function() {
     context('Given there are user mech badges in the database', () => {
         const testUsers = makeUsersArray();
         const testMechBadges = makeMechBadgesArray();
+        const testBadgeTiers = makeBadgeTiersArray();
         const testUserMechBadges = makeUserBadgesMechArray();
 
         beforeEach('insert user mech badges', () => {
@@ -236,6 +264,11 @@ describe('User Mech Badges Endpoints', function() {
                         .insert(testMechBadges)
                 })
                 .then(() => {
+                  return db
+                      .into('badge_tiers')
+                      .insert(testBadgeTiers)
+                })
+                .then(() => {
                     return db
                         .into('user_badges_mech')
                         .insert(testUserMechBadges)
@@ -246,7 +279,8 @@ describe('User Mech Badges Endpoints', function() {
         const idToUpdate = 2;
         const updateUserMechBadge = {
           uid: 3,
-          badge_id: 4
+          badge_id: 4,
+          tier_id: 3
         };
         const expectedUserMechBadge = {
           ...testUserMechBadges[idToUpdate - 1],
@@ -270,7 +304,7 @@ describe('User Mech Badges Endpoints', function() {
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
-              message: `Request body must contain a user ID and badge ID`
+              message: `Request body must contain a user ID, badge ID, and badge tier ID`
             }
           })
       });

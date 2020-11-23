@@ -3,6 +3,7 @@ const app = require('../src/app');
 const { expect } = require('chai');
 const { makeUserBadgesCatArray } = require('./user-badges-cat.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
+const { makeBadgeTiersArray } = require('./badge-tiers.fixtures');
 const { makeCatBadgesArray } = require('./badges-cat.fixtures');
 
 describe('User Category Badges Endpoints', function() {
@@ -20,9 +21,9 @@ describe('User Category Badges Endpoints', function() {
 
   after('disconnect from db', () => db.destroy());
 
-  before('clean the table', () => db.raw('TRUNCATE users, badges_cat, user_badges_cat RESTART IDENTITY CASCADE'));
+  before('clean the table', () => db.raw('TRUNCATE users, badges_cat, badge_tiers, user_badges_cat RESTART IDENTITY CASCADE'));
 
-  afterEach('cleanup',() => db.raw('TRUNCATE users, badges_cat, user_badges_cat RESTART IDENTITY CASCADE'));
+  afterEach('cleanup',() => db.raw('TRUNCATE users, badges_cat, badge_tiers, user_badges_cat RESTART IDENTITY CASCADE'));
 
   describe(`GET /api/user-badges-cat`, () => {
     context(`Given no user category badges`, () => {
@@ -36,6 +37,7 @@ describe('User Category Badges Endpoints', function() {
     context('Given there are user category badges in the database', () => {
       const testUsers = makeUsersArray();
       const testCatBadges = makeCatBadgesArray();
+      const testBadgeTiers = makeBadgeTiersArray();
       const testUserCatBadges = makeUserBadgesCatArray();
 
       beforeEach('insert user category badges', () => {
@@ -46,6 +48,11 @@ describe('User Category Badges Endpoints', function() {
                 return db
                     .into('badges_cat')
                     .insert(testCatBadges)
+            })
+            .then(() => {
+              return db
+                  .into('badge_tiers')
+                  .insert(testBadgeTiers)
             })
             .then(() => {
                 return db
@@ -75,6 +82,7 @@ describe('User Category Badges Endpoints', function() {
     context('Given there are badges in the database', () => {
         const testUsers = makeUsersArray();
         const testCatBadges = makeCatBadgesArray();
+        const testBadgeTiers = makeBadgeTiersArray();
         const testUserCatBadges = makeUserBadgesCatArray();
 
         beforeEach('insert user category badges', () => {
@@ -85,6 +93,11 @@ describe('User Category Badges Endpoints', function() {
                     return db
                         .into('badges_cat')
                         .insert(testCatBadges)
+                })
+                .then(() => {
+                  return db
+                      .into('badge_tiers')
+                      .insert(testBadgeTiers)
                 })
                 .then(() => {
                     return db
@@ -108,6 +121,7 @@ describe('User Category Badges Endpoints', function() {
     context('Given there are user category badges in the database', () => {
       const testUsers = makeUsersArray();
       const testCatBadges = makeCatBadgesArray();
+      const testBadgeTiers = makeBadgeTiersArray();
 
       beforeEach('insert user category badges', () => {
         return db
@@ -118,12 +132,18 @@ describe('User Category Badges Endpoints', function() {
                     .into('badges_cat')
                     .insert(testCatBadges)
             })
+            .then(() => {
+              return db
+                  .into('badge_tiers')
+                  .insert(testBadgeTiers)
+            })
       });
 
       it(`creates a badge, responding with 201 and the new badge`, () => {
         const newUserCatBadge = {
           uid: 4,
-          badge_id: 3
+          badge_id: 3,
+          tier_id: 3
         };
 
         return supertest(app)
@@ -133,6 +153,7 @@ describe('User Category Badges Endpoints', function() {
           .expect(res => {
             expect(res.body.uid).to.eql(newUserCatBadge.uid)
             expect(res.body.badge_id).to.eql(newUserCatBadge.badge_id)
+            expect(res.body.tier_id).to.eql(newUserCatBadge.tier_id)
             expect(res.body).to.have.property('id')
             expect(res.headers.location).to.eql(`/api/user-badges-cat/${res.body.id}`)
           })
@@ -143,12 +164,13 @@ describe('User Category Badges Endpoints', function() {
           )
       });
 
-      const requiredFields = [ 'uid', 'badge_id' ];
+      const requiredFields = [ 'uid', 'badge_id', 'tier_id' ];
 
       requiredFields.forEach(field => {
           const newUserCatBadge = {
               uid: 3,
-              badge_id: 4
+              badge_id: 4,
+              tier_id: 3
           };
 
         it(`responds with 400 and an error message when the '${field}' is missing`, () => {
@@ -178,6 +200,7 @@ describe('User Category Badges Endpoints', function() {
     context('Given there are user category badges in the database', () => {
         const testUsers = makeUsersArray();
         const testCatBadges = makeCatBadgesArray();
+        const testBadgeTiers = makeBadgeTiersArray();
         const testUserCatBadges = makeUserBadgesCatArray();
 
         beforeEach('insert user category badges', () => {
@@ -188,6 +211,11 @@ describe('User Category Badges Endpoints', function() {
                     return db
                         .into('badges_cat')
                         .insert(testCatBadges)
+                })
+                .then(() => {
+                  return db
+                      .into('badge_tiers')
+                      .insert(testBadgeTiers)
                 })
                 .then(() => {
                     return db
@@ -224,6 +252,7 @@ describe('User Category Badges Endpoints', function() {
     context('Given there are user category badges in the database', () => {
         const testUsers = makeUsersArray();
         const testCatBadges = makeCatBadgesArray();
+        const testBadgeTiers = makeBadgeTiersArray();
         const testUserCatBadges = makeUserBadgesCatArray();
 
         beforeEach('insert user category badges', () => {
@@ -236,6 +265,11 @@ describe('User Category Badges Endpoints', function() {
                         .insert(testCatBadges)
                 })
                 .then(() => {
+                  return db
+                      .into('badge_tiers')
+                      .insert(testBadgeTiers)
+                })
+                .then(() => {
                     return db
                         .into('user_badges_cat')
                         .insert(testUserCatBadges)
@@ -246,7 +280,8 @@ describe('User Category Badges Endpoints', function() {
         const idToUpdate = 2;
         const updateUserCatBadge = {
           uid: 3,
-          badge_id: 4
+          badge_id: 4,
+          tier_id: 3
         };
         const expectedUserCatBadge = {
           ...testUserCatBadges[idToUpdate - 1],
@@ -270,7 +305,7 @@ describe('User Category Badges Endpoints', function() {
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
-              message: `Request body must contain a user ID and badge ID`
+              message: `Request body must contain a user ID, badge ID, and badge tier ID`
             }
           })
       });
@@ -278,7 +313,8 @@ describe('User Category Badges Endpoints', function() {
       it(`responds with 204 when updating only a subset of fields`, () => {
         const idToUpdate = 2;
         const updateUserCatBadge = {
-            badge_id: 5
+            badge_id: 5,
+            tier_id: 3
         };
         const expectedUserCatBadge = {
           ...testUserCatBadges[idToUpdate - 1],

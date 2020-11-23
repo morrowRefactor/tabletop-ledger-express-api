@@ -89,6 +89,14 @@ ALTER TABLE user_badges_cat
 
 DROP TABLE IF EXISTS badges_cat;
 
+ALTER TABLE user_badges_mech
+    DROP COLUMN tier_id;
+
+ALTER TABLE user_badges_cat
+    DROP COLUMN tier_id;
+
+DROP TABLE IF EXISTS badge_tiers;
+
 DROP TABLE IF EXISTS user_badges_mech;
 
 DROP TABLE IF EXISTS user_badges_cat;

@@ -113,24 +113,31 @@ INSERT INTO badges_cat (name)
         ('Deduction expert')
 ;
 
-INSERT INTO user_badges_mech (uid, badge_id)
+INSERT INTO badge_tiers (name)
     VALUES
-        (1, 3),
-        (1, 5),
-        (2, 6),
-        (2, 7),
-        (5, 5),
-        (4, 1)
+        ('Beginner'),
+        ('Intermediate'),
+        ('Expert')
 ;
 
-INSERT INTO user_badges_cat (uid, badge_id)
+INSERT INTO user_badges_mech (uid, badge_id, tier_id)
     VALUES
-        (1, 2),
-        (1, 6),
-        (3, 1),
-        (4, 7),
-        (5, 4),
-        (2, 5)
+        (1, 3, 1),
+        (1, 5, 3),
+        (2, 6, 2),
+        (2, 7, 3),
+        (5, 5, 1),
+        (4, 1, 3)
+;
+
+INSERT INTO user_badges_cat (uid, badge_id, tier_id)
+    VALUES
+        (1, 2, 3),
+        (1, 6, 1),
+        (3, 1, 2),
+        (4, 7, 2),
+        (5, 4, 3),
+        (2, 5, 1)
 ;
 
 INSERT INTO user_standings (uid, wins, losses, sessions) 

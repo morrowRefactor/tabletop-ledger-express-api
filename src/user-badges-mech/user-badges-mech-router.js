@@ -8,7 +8,8 @@ const jsonParser = express.json();
 const serializeMechUserBadges = badge => ({
   id: badge.id,
   uid: badge.uid,
-  badge_id: badge.badge_id
+  badge_id: badge.badge_id,
+  tier_id: badge.tier_id
 });
 
 userBadgesMechRouter
@@ -22,8 +23,8 @@ userBadgesMechRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { uid, badge_id } = req.body;
-    const newUserMechBadge = { uid, badge_id };
+    const { uid, badge_id, tier_id } = req.body;
+    const newUserMechBadge = { uid, badge_id, tier_id };
 
     for (const [key, value] of Object.entries(newUserMechBadge))
       if (value == null)
@@ -75,14 +76,14 @@ userBadgesMechRouter
       .catch(next)
   })
   .patch(jsonParser, (req, res, next) => {
-    const { uid, badge_id } = req.body;
-    const newUserMechBadge = { uid, badge_id };
+    const { uid, badge_id, tier_id } = req.body;
+    const newUserMechBadge = { uid, badge_id, tier_id };
 
     const numberOfValues = Object.values(newUserMechBadge).filter(Boolean).length;
     if (numberOfValues === 0) {
         return res.status(400).json({
         error: {
-          message: `Request body must contain a user ID and badge ID`
+          message: `Request body must contain a user ID, badge ID, and badge tier ID`
         }
       });
     };
