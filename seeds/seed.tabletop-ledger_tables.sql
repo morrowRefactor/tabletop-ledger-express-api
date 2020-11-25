@@ -120,35 +120,6 @@ INSERT INTO badge_tiers (name)
         ('Expert')
 ;
 
-INSERT INTO user_badges_mech (uid, badge_id, tier_id)
-    VALUES
-        (1, 3, 1),
-        (1, 5, 3),
-        (2, 6, 2),
-        (2, 7, 3),
-        (5, 5, 1),
-        (4, 1, 3)
-;
-
-INSERT INTO user_badges_cat (uid, badge_id, tier_id)
-    VALUES
-        (1, 2, 3),
-        (1, 6, 1),
-        (3, 1, 2),
-        (4, 7, 2),
-        (5, 4, 3),
-        (2, 5, 1)
-;
-
-INSERT INTO user_standings (uid, wins, losses, sessions) 
-    VALUES
-        (1, 3, 1, 4),
-        (2, 1, 3, 4),
-        (3, 0, 1, 1),
-        (4, 0, 2, 2),
-        (5, 0, 1, 1)
-;
-
 INSERT INTO games_cat (cat_id, name)
     VALUES
         (123, 'Adventure'),
@@ -161,6 +132,35 @@ INSERT INTO games_mech (mech_id, name)
         (123, 'Cooperative'),
         (234, 'Dungeon Crawler'),
         (345, 'Worker Placement')
+;
+
+INSERT INTO user_badges_mech (uid, badge_id, tier_id)
+    VALUES
+        (1, 123, 1),
+        (1, 234, 3),
+        (2, 234, 2),
+        (2, 345, 3),
+        (5, 234, 1),
+        (4, 123, 3)
+;
+
+INSERT INTO user_badges_cat (uid, badge_id, tier_id)
+    VALUES
+        (1, 123, 3),
+        (1, 234, 1),
+        (3, 123, 2),
+        (4, 345, 2),
+        (5, 234, 3),
+        (2, 234, 1)
+;
+
+INSERT INTO user_standings (uid, wins, losses, sessions) 
+    VALUES
+        (1, 3, 1, 4),
+        (2, 1, 3, 4),
+        (3, 0, 1, 1),
+        (4, 0, 2, 2),
+        (5, 0, 1, 1)
 ;
 
 INSERT INTO games_cat_matches (game_id, cat_id)

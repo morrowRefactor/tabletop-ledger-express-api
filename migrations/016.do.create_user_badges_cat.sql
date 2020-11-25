@@ -3,7 +3,7 @@ CREATE TABLE user_badges_cat (
     uid INTEGER
         REFERENCES users(id) ON DELETE CASCADE NOT NULL,
     badge_id INTEGER
-        REFERENCES badges_cat(id) ON DELETE CASCADE NOT NULL,
+        REFERENCES games_cat(cat_id) ON DELETE CASCADE NOT NULL,
     tier_id INTEGER
         REFERENCES badge_tiers(id) ON DELETE CASCADE NOT NULL
 );
