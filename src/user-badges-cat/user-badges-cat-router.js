@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const CatUserBadgesService = require('./user-badges-cat-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const userBadgesCatRouter = express.Router();
 const jsonParser = express.json();
@@ -22,7 +23,7 @@ userBadgesCatRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { uid, badge_id, tier_id } = req.body;
     const newUserCatBadge = { uid, badge_id, tier_id };
 
@@ -65,7 +66,7 @@ userBadgesCatRouter
   .get((req, res, next) => {
     res.json(serializeCatUserBadges(res.badge))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     CatUserBadgesService.deleteCatUserBadge(
       req.app.get('db'),
       req.params.badge_id
@@ -75,7 +76,7 @@ userBadgesCatRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { uid, badge_id, tier_id } = req.body;
     const newUserCatBadge = { uid, badge_id, tier_id };
 

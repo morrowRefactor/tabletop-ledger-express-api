@@ -3,8 +3,10 @@ const app = require('../src/app');
 const { expect } = require('chai');
 const { makeUserBadgesMechArray } = require('./user-badges-mech.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
-const { makeMechBadgesArray } = require('./badges-mech.fixtures');
+const { makeMechGamesArray } = require('./games-mech.fixtures');
 const { makeBadgeTiersArray } = require('./badge-tiers.fixtures');
+const helpers = require('./test-helpers');
+const jwt = require('jsonwebtoken');
 
 describe('User Mech Badges Endpoints', function() {
   let db;
@@ -21,9 +23,9 @@ describe('User Mech Badges Endpoints', function() {
 
   after('disconnect from db', () => db.destroy());
 
-  before('clean the table', () => db.raw('TRUNCATE users, badges_mech, badge_tiers, user_badges_mech RESTART IDENTITY CASCADE'));
+  before('clean the table', () => db.raw('TRUNCATE users, games_mech, badge_tiers, user_badges_mech RESTART IDENTITY CASCADE'));
 
-  afterEach('cleanup',() => db.raw('TRUNCATE users, badges_mech, badge_tiers, user_badges_mech RESTART IDENTITY CASCADE'));
+  afterEach('cleanup',() => db.raw('TRUNCATE users, games_mech, badge_tiers, user_badges_mech RESTART IDENTITY CASCADE'));
 
   describe(`GET /api/user-badges-mech`, () => {
     context(`Given no user mech badges`, () => {
@@ -36,7 +38,7 @@ describe('User Mech Badges Endpoints', function() {
 
     context('Given there are user mech badges in the database', () => {
       const testUsers = makeUsersArray();
-      const testMechBadges = makeMechBadgesArray();
+      const testMechBadges = makeMechGamesArray();
       const testBadgeTiers = makeBadgeTiersArray();
       const testUserMechBadges = makeUserBadgesMechArray();
 
@@ -46,7 +48,7 @@ describe('User Mech Badges Endpoints', function() {
             .insert(testUsers)
             .then(() => {
                 return db
-                    .into('badges_mech')
+                    .into('games_mech')
                     .insert(testMechBadges)
             })
             .then(() => {
@@ -81,7 +83,7 @@ describe('User Mech Badges Endpoints', function() {
 
     context('Given there are badges in the database', () => {
         const testUsers = makeUsersArray();
-        const testMechBadges = makeMechBadgesArray();
+        const testMechBadges = makeMechGamesArray();
         const testBadgeTiers = makeBadgeTiersArray();
         const testUserMechBadges = makeUserBadgesMechArray();
 
@@ -91,7 +93,7 @@ describe('User Mech Badges Endpoints', function() {
                 .insert(testUsers)
                 .then(() => {
                     return db
-                        .into('badges_mech')
+                        .into('games_mech')
                         .insert(testMechBadges)
                 })
                 .then(() => {
@@ -120,17 +122,24 @@ describe('User Mech Badges Endpoints', function() {
 
     context('Given there are user mech badges in the database', () => {
       const testUsers = makeUsersArray();
-      const testMechBadges = makeMechBadgesArray();
+      const testMechBadges = makeMechGamesArray();
       const testBadgeTiers = makeBadgeTiersArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
 
       beforeEach('insert user mech badges', () => {
         return db
-            .into('users')
-            .insert(testUsers)
+            .into('games_mech')
+            .insert(testMechBadges)
             .then(() => {
-                return db
-                    .into('badges_mech')
-                    .insert(testMechBadges)
+              helpers.seedUsers(db, testUsers)
             })
             .then(() => {
               return db
@@ -139,15 +148,39 @@ describe('User Mech Badges Endpoints', function() {
             })
       });
 
+      it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+        return supertest(app)
+          .post('/api/game-tips')
+          .expect(401, { error: `Missing bearer token` })
+      });
+
+      it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+        const validUser = testUsers[0];
+        const invalidSecret = 'bad-secret';
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
+      it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+        const invalidUser = { name: 'user-not-existy', id: 1 };
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(invalidUser))
+          .expect(401, { error: `Unauthorized request` })
+      });
+
       it(`creates a badge, responding with 201 and the new badge`, () => {
         const newUserMechBadge = {
           uid: 4,
-          badge_id: 3,
+          badge_id: 123,
           tier_id: 3
         };
 
         return supertest(app)
           .post('/api/user-badges-mech')
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(newUserMechBadge)
           .expect(201)
           .expect(res => {
@@ -169,7 +202,7 @@ describe('User Mech Badges Endpoints', function() {
       requiredFields.forEach(field => {
           const newUserMechBadge = {
               uid: 3,
-              badge_id: 4
+              badge_id: 234
           };
 
         it(`responds with 400 and an error message when the '${field}' is missing`, () => {
@@ -177,6 +210,7 @@ describe('User Mech Badges Endpoints', function() {
 
           return supertest(app)
             .post('/api/user-badges-mech')
+            .set('Authorization', makeAuthHeader(testUsers[0]))
             .send(newUserMechBadge)
             .expect(400, {
               error: { message: `Missing '${field}' in request body` }
@@ -188,98 +222,215 @@ describe('User Mech Badges Endpoints', function() {
 
   describe(`DELETE /api/user-badges-mech/:badge_id`, () => {
     context(`Given no user mech badges`, () => {
+      const testUsers = makeUsersArray();
+      const testMechBadges = makeMechGamesArray();
+      const testBadgeTiers = makeBadgeTiersArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert user mech badges', () => {
+        return db
+            .into('games_mech')
+            .insert(testMechBadges)
+            .then(() => {
+              helpers.seedUsers(db, testUsers)
+            })
+            .then(() => {
+              return db
+                  .into('badge_tiers')
+                  .insert(testBadgeTiers)
+            })
+      });
+
       it(`responds with 404`, () => {
         const badge_id = 123;
         return supertest(app)
           .delete(`/api/user-badges-mech/${badge_id}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `User mech badge doesn't exist` } })
       })
     });
 
     context('Given there are user mech badges in the database', () => {
         const testUsers = makeUsersArray();
-        const testMechBadges = makeMechBadgesArray();
+        const testMechBadges = makeMechGamesArray();
         const testBadgeTiers = makeBadgeTiersArray();
         const testUserMechBadges = makeUserBadgesMechArray();
 
+        function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+          const token = jwt.sign({ user_id: user.id }, secret, {
+            subject: user.name,
+            algorithm: 'HS256',
+          });
+  
+          return `Bearer ${token}`
+        }
+  
         beforeEach('insert user mech badges', () => {
-            return db
-                .into('users')
-                .insert(testUsers)
-                .then(() => {
-                    return db
-                        .into('badges_mech')
-                        .insert(testMechBadges)
-                })
-                .then(() => {
-                  return db
-                      .into('badge_tiers')
-                      .insert(testBadgeTiers)
-                })
-                .then(() => {
-                    return db
-                        .into('user_badges_mech')
-                        .insert(testUserMechBadges)
-                })
+          return db
+              .into('games_mech')
+              .insert(testMechBadges)
+              .then(() => {
+                helpers.seedUsers(db, testUsers)
+              })
+              .then(() => {
+                return db
+                    .into('badge_tiers')
+                    .insert(testBadgeTiers)
+              })
+              .then(() => {
+                return db
+                    .into('user_badges_mech')
+                    .insert(testUserMechBadges)
+            })
         });
 
-      it('responds with 204 and removes the badge', () => {
-        const idToRemove = 2
-        const expectedUserMechBadge = testUserMechBadges.filter(badge => badge.id !== idToRemove)
-        return supertest(app)
-          .delete(`/api/user-badges-mech/${idToRemove}`)
-          .expect(204)
-          .then(res =>
-            supertest(app)
-              .get(`/api/user-badges-mech`)
-              .expect(expectedUserMechBadge)
-          )
-      });
+        it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+          return supertest(app)
+            .post('/api/game-tips')
+            .expect(401, { error: `Missing bearer token` })
+        });
+  
+        it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+          const validUser = testUsers[0];
+          const invalidSecret = 'bad-secret';
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+            .expect(401, { error: `Unauthorized request` })
+        });
+        
+        it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+          const invalidUser = { name: 'user-not-existy', id: 1 };
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(invalidUser))
+            .expect(401, { error: `Unauthorized request` })
+        });
+
+        it('responds with 204 and removes the badge', () => {
+          const idToRemove = 2
+          const expectedUserMechBadge = testUserMechBadges.filter(badge => badge.id !== idToRemove)
+          return supertest(app)
+            .delete(`/api/user-badges-mech/${idToRemove}`)
+            .set('Authorization', makeAuthHeader(testUsers[0]))
+            .expect(204)
+            .then(res =>
+              supertest(app)
+                .get(`/api/user-badges-mech`)
+                .expect(expectedUserMechBadge)
+            )
+        });
     });
   });
 
   describe(`PATCH /api/user-badges-mech/:badge_id`, () => {
     context(`Given no user mech badges`, () => {
+      const testUsers = makeUsersArray();
+      const testMechBadges = makeMechGamesArray();
+      const testBadgeTiers = makeBadgeTiersArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert user mech badges', () => {
+        return db
+            .into('games_mech')
+            .insert(testMechBadges)
+            .then(() => {
+              helpers.seedUsers(db, testUsers)
+            })
+            .then(() => {
+              return db
+                  .into('badge_tiers')
+                  .insert(testBadgeTiers)
+            })
+      });
+
       it(`responds with 404`, () => {
         const badge_id = 123;
         return supertest(app)
-          .delete(`/api/user-badges-mech/${badge_id}`)
+          .patch(`/api/user-badges-mech/${badge_id}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `User mech badge doesn't exist` } })
       })
     });
 
     context('Given there are user mech badges in the database', () => {
-        const testUsers = makeUsersArray();
-        const testMechBadges = makeMechBadgesArray();
-        const testBadgeTiers = makeBadgeTiersArray();
-        const testUserMechBadges = makeUserBadgesMechArray();
+      const testUsers = makeUsersArray();
+      const testMechBadges = makeMechGamesArray();
+      const testBadgeTiers = makeBadgeTiersArray();
+      const testUserMechBadges = makeUserBadgesMechArray();
 
-        beforeEach('insert user mech badges', () => {
-            return db
-                .into('users')
-                .insert(testUsers)
-                .then(() => {
-                    return db
-                        .into('badges_mech')
-                        .insert(testMechBadges)
-                })
-                .then(() => {
-                  return db
-                      .into('badge_tiers')
-                      .insert(testBadgeTiers)
-                })
-                .then(() => {
-                    return db
-                        .into('user_badges_mech')
-                        .insert(testUserMechBadges)
-                })
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
         });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert user mech badges', () => {
+        return db
+            .into('games_mech')
+            .insert(testMechBadges)
+            .then(() => {
+              helpers.seedUsers(db, testUsers)
+            })
+            .then(() => {
+              return db
+                  .into('badge_tiers')
+                  .insert(testBadgeTiers)
+            })
+            .then(() => {
+              return db
+                  .into('user_badges_mech')
+                  .insert(testUserMechBadges)
+          })
+      });
+
+      it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+        return supertest(app)
+          .post('/api/game-tips')
+          .expect(401, { error: `Missing bearer token` })
+      });
+
+      it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+        const validUser = testUsers[0];
+        const invalidSecret = 'bad-secret';
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
+      it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+        const invalidUser = { name: 'user-not-existy', id: 1 };
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(invalidUser))
+          .expect(401, { error: `Unauthorized request` })
+      });
 
       it('responds with 204 and updates the badge', () => {
         const idToUpdate = 2;
         const updateUserMechBadge = {
           uid: 3,
-          badge_id: 4,
+          badge_id: 123,
           tier_id: 3
         };
         const expectedUserMechBadge = {
@@ -288,6 +439,7 @@ describe('User Mech Badges Endpoints', function() {
         };
         return supertest(app)
           .patch(`/api/user-badges-mech/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(updateUserMechBadge)
           .expect(204)
           .then(res =>
@@ -301,6 +453,7 @@ describe('User Mech Badges Endpoints', function() {
         const idToUpdate = 2
         return supertest(app)
           .patch(`/api/user-badges-mech/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
@@ -312,7 +465,7 @@ describe('User Mech Badges Endpoints', function() {
       it(`responds with 204 when updating only a subset of fields`, () => {
         const idToUpdate = 2;
         const updateUserMechBadge = {
-            badge_id: 5
+            badge_id: 234
         };
         const expectedUserMechBadge = {
           ...testUserMechBadges[idToUpdate - 1],
@@ -321,6 +474,7 @@ describe('User Mech Badges Endpoints', function() {
 
         return supertest(app)
           .patch(`/api/user-badges-mech/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({
             ...updateUserMechBadge,
             fieldToIgnore: 'should not be in GET response'

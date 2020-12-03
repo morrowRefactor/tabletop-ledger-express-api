@@ -2,6 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const path = require('path');
 const SessionsService = require('./sessions-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const sessionsRouter = express.Router();
 const jsonParser = express.json();
@@ -24,7 +25,7 @@ sessionsRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { game_id, uid, date, name } = req.body;
     const newSession = { game_id, uid, date, name };
     const newSessReqs = { game_id, uid, date };
@@ -68,7 +69,7 @@ sessionsRouter
   .get((req, res, next) => {
     res.json(serializeSessions(res.sess))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     SessionsService.deleteSession(
       req.app.get('db'),
       req.params.sess_id
@@ -78,7 +79,7 @@ sessionsRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { game_id, uid, date } = req.body;
     const sessionToUpdate = { game_id, uid, date };
 

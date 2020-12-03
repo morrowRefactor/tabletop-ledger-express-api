@@ -24,6 +24,7 @@ const gamesCatMatchesRouter = require('./games-cat-matches/games-cat-matches-rou
 const gamesMechMatchesRouter = require('./games-mech-matches/games-mech-matches-router');
 const userGamesByCatLogsRouter = require('./user-game-cat-logs/user-game-cat-logs-router');
 const userGamesByMechRouter = require('./user-game-mech-logs/user-game-mech-logs-router');
+const authRouter = require('./auth/auth-router');
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/games-cat-matches', gamesCatMatchesRouter);
 app.use('/api/games-mech-matches', gamesMechMatchesRouter);
 app.use('/api/user-game-cat-logs', userGamesByCatLogsRouter);
 app.use('/api/user-game-mech-logs', userGamesByMechRouter);
+app.use('/api/auth', authRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, world')

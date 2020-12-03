@@ -3,6 +3,9 @@ const app = require('../src/app');
 const { expect } = require('chai');
 const { makeUserStandingsArray } = require('./user-standings.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
+const { makeGamesArray } = require('./games.fixtures');
+const helpers = require('./test-helpers');
+const jwt = require('jsonwebtoken');
 
 describe('User Standings Endpoints', function() {
   let db;
@@ -19,9 +22,9 @@ describe('User Standings Endpoints', function() {
 
   after('disconnect from db', () => db.destroy());
 
-  before('clean the table', () => db.raw('TRUNCATE users, user_standings RESTART IDENTITY CASCADE'));
+  before('clean the table', () => db.raw('TRUNCATE users, games, user_standings RESTART IDENTITY CASCADE'));
 
-  afterEach('cleanup',() => db.raw('TRUNCATE users, user_standings RESTART IDENTITY CASCADE'));
+  afterEach('cleanup',() => db.raw('TRUNCATE users, games, user_standings RESTART IDENTITY CASCADE'));
 
   describe(`GET /api/user-standings`, () => {
     context(`Given no user standings`, () => {
@@ -94,16 +97,52 @@ describe('User Standings Endpoints', function() {
 
     context('Given there are user standings in the database', () => {
       const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
 
       beforeEach('insert users', () => {
         return db
-            .into('users')
-            .insert(testUsers)
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+      });
+      
+      it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+        return supertest(app)
+          .post('/api/game-tips')
+          .expect(401, { error: `Missing bearer token` })
       });
 
+      it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+        const validUser = testUsers[0];
+        const invalidSecret = 'bad-secret';
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
+      it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+        const invalidUser = { name: 'user-not-existy', id: 1 };
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(invalidUser))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
       it(`creates a user standing, responding with 201 and the new user standing`, () => {    
         const newUserStandings = {
-          uid: 4,
+          uid: 1,
           wins: 5,
           losses: 2,
           sessions: 7
@@ -111,6 +150,7 @@ describe('User Standings Endpoints', function() {
 
         return supertest(app)
           .post('/api/user-standings')
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(newUserStandings)
           .expect(201)
           .expect(res => {
@@ -143,6 +183,7 @@ describe('User Standings Endpoints', function() {
 
           return supertest(app)
             .post('/api/user-standings')
+            .set('Authorization', makeAuthHeader(testUsers[0]))
             .send(newUserStandings)
             .expect(400, {
               error: { message: `Missing '${field}' in request body` }
@@ -154,68 +195,185 @@ describe('User Standings Endpoints', function() {
 
   describe(`DELETE /api/user-standings/:stand_id`, () => {
     context(`Given no user standings`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert users', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+      });
+
       it(`responds with 404`, () => {
         const stand_id = 123;
         return supertest(app)
           .delete(`/api/user-standings/${stand_id}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `User standing doesn't exist` } })
       })
     });
 
     context('Given there are user standings in the database', () => {
         const testUsers = makeUsersArray();
+        const testGames = makeGamesArray();
         const testUserStandings = makeUserStandingsArray();
 
-        beforeEach('insert user standings', () => {
-            return db
-                .into('users')
-                .insert(testUsers)
-                .then(() => {
-                    return db
-                        .into('user_standings')
-                        .insert(testUserStandings)
-                })
+        function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+          const token = jwt.sign({ user_id: user.id }, secret, {
+            subject: user.name,
+            algorithm: 'HS256',
+          });
+  
+          return `Bearer ${token}`
+        }
+
+        beforeEach('insert users', () => {
+          return db
+            .into('games')
+            .insert(testGames)
+            .then(() => {
+              helpers.seedUsers(db, testUsers)
+            })
+            .then(() => {
+              return db
+                  .into('user_standings')
+                  .insert(testUserStandings)
+            })
+        });
+        
+        it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+          return supertest(app)
+            .post('/api/game-tips')
+            .expect(401, { error: `Missing bearer token` })
+        });
+  
+        it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+          const validUser = testUsers[0];
+          const invalidSecret = 'bad-secret';
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+            .expect(401, { error: `Unauthorized request` })
+        });
+        
+        it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+          const invalidUser = { name: 'user-not-existy', id: 1 };
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(invalidUser))
+            .expect(401, { error: `Unauthorized request` })
         });
 
-      it('responds with 204 and removes the user standings', () => {
-        const idToRemove = 2
-        const expectedUserStandings = testUserStandings.filter(stand => stand.id !== idToRemove)
-        return supertest(app)
-          .delete(`/api/user-standings/${idToRemove}`)
-          .expect(204)
-          .then(res =>
-            supertest(app)
-              .get(`/api/user-standings`)
-              .expect(expectedUserStandings)
-          )
-      });
+        it('responds with 204 and removes the user standings', () => {
+          const idToRemove = 2
+          const expectedUserStandings = testUserStandings.filter(stand => stand.id !== idToRemove)
+          return supertest(app)
+            .delete(`/api/user-standings/${idToRemove}`)
+            .set('Authorization', makeAuthHeader(testUsers[0]))
+            .expect(204)
+            .then(res =>
+              supertest(app)
+                .get(`/api/user-standings`)
+                .expect(expectedUserStandings)
+            )
+        });
     });
   });
 
   describe(`PATCH /api/user-standings/:stand_id`, () => {
     context(`Given no user standings`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert users', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+      });
+
       it(`responds with 404`, () => {
         const stand_id = 123;
         return supertest(app)
-          .delete(`/api/user-standings/${stand_id}`)
+          .patch(`/api/user-standings/${stand_id}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `User standing doesn't exist` } })
       })
     });
 
     context('Given there are user standings in the database', () => {
-        const testUsers = makeUsersArray();
-        const testUserStandings = makeUserStandingsArray();
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+      const testUserStandings = makeUserStandingsArray();
 
-        beforeEach('insert user standings', () => {
-            return db
-                .into('users')
-                .insert(testUsers)
-                .then(() => {
-                    return db
-                        .into('user_standings')
-                        .insert(testUserStandings)
-                })
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
         });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert users', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+          .then(() => {
+            return db
+                .into('user_standings')
+                .insert(testUserStandings)
+          })
+      });
+      
+      it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+        return supertest(app)
+          .post('/api/game-tips')
+          .expect(401, { error: `Missing bearer token` })
+      });
+
+      it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+        const validUser = testUsers[0];
+        const invalidSecret = 'bad-secret';
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
+      it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+        const invalidUser = { name: 'user-not-existy', id: 1 };
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(invalidUser))
+          .expect(401, { error: `Unauthorized request` })
+      });
 
       it('responds with 204 and updates the user standings', () => {
         const idToUpdate = 2;
@@ -231,6 +389,7 @@ describe('User Standings Endpoints', function() {
         };
         return supertest(app)
           .patch(`/api/user-standings/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(updateUserStandings)
           .expect(204)
           .then(res =>
@@ -244,6 +403,7 @@ describe('User Standings Endpoints', function() {
         const idToUpdate = 2
         return supertest(app)
           .patch(`/api/user-standings/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
@@ -266,6 +426,7 @@ describe('User Standings Endpoints', function() {
 
         return supertest(app)
           .patch(`/api/user-standings/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({
             ...updateUserStandings,
             fieldToIgnore: 'should not be in GET response'

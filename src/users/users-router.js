@@ -2,6 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const path = require('path');
 const UsersService = require('./users-service');
+const AuthService = require('../auth/auth-service');
 
 const usersRouter = express.Router();
 const jsonParser = express.json();
@@ -10,8 +11,15 @@ const serializeUsers = u => ({
   id: u.id,
   name: xss(u.name),
   about: xss(u.about),
-  password: xss(u.password),
   joined_date: u.joined_date.toISOString().substr(0,10)
+});
+
+const serializeNewUser = u => ({
+  id: u.id,
+  name: xss(u.name),
+  about: xss(u.about),
+  joined_date: u.joined_date.toISOString().substr(0,10),
+  authToken: u.authToken
 });
 
 usersRouter
@@ -34,15 +42,45 @@ usersRouter
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` }
         });
-    UsersService.insertUser(
+
+    const passwordError = UsersService.validatePassword(password);
+    if (passwordError)
+      return res.status(400).json({ error: passwordError });
+
+    
+
+    UsersService.hasUserWithUserName(
       req.app.get('db'),
-      newUser
+      name
     )
-      .then(user => {
-        res
-          .status(201)
-          .location(path.posix.join(req.originalUrl, `/${user.id}`))
-          .json(serializeUsers(user));
+      .then(hasUserWithUserName => {
+        if (hasUserWithUserName)
+          return res.status(400).json({ error: `Username already taken` })
+    
+          return UsersService.hashPassword(password)
+          .then(hashedPassword => {
+            const newUser = {
+              name,
+              password: hashedPassword,
+              about,
+              joined_date
+            };
+
+            UsersService.insertUser(
+              req.app.get('db'),
+              newUser
+            )
+              .then(user => {
+                const sub = user.name;
+                const payload = { user_id: user.id };
+                const authToken = AuthService.createJwt(sub, payload);
+                user.authToken = authToken;
+                res
+                  .status(201)
+                  .location(path.posix.join(req.originalUrl, `/${user.id}`)) 
+                  .json(serializeNewUser(user));
+              })
+            })
       })
       .catch(next)
   });

@@ -5,6 +5,8 @@ const { makeSessionNotesArray, makeMaliciousSessionNotes } = require('./session-
 const { makeUsersArray } = require('./users.fixtures');
 const { makeGamesArray } = require('./games.fixtures');
 const { makeSessionsWIDArray } = require('./sessions.fixtures');
+const helpers = require('./test-helpers');
+const jwt = require('jsonwebtoken');
 
 describe('Session Notes Endpoints', function() {
   let db;
@@ -197,20 +199,50 @@ describe('Session Notes Endpoints', function() {
       const testGames = makeGamesArray();
       const testSessions = makeSessionsWIDArray();
 
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
       beforeEach('insert sessions', () => {
         return db
-          .into('users')
-          .insert(testUsers)
+          .into('games')
+          .insert(testGames)
           .then(() => {
-              return db
-                .into('games')
-                .insert(testGames)
+            helpers.seedUsers(db, testUsers)
           })
           .then(() => {
               return db
                 .into('sessions')
                 .insert(testSessions)
           })
+      });
+
+      it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+        return supertest(app)
+          .post('/api/game-tips')
+          .expect(401, { error: `Missing bearer token` })
+      });
+
+      it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+        const validUser = testUsers[0];
+        const invalidSecret = 'bad-secret';
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
+      it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+        const invalidUser = { name: 'user-not-existy', id: 1 };
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(invalidUser))
+          .expect(401, { error: `Unauthorized request` })
       });
 
       it(`creates a session note, responding with 201 and the new session note`, () => {
@@ -222,6 +254,7 @@ describe('Session Notes Endpoints', function() {
 
         return supertest(app)
           .post('/api/session-notes')
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(newSessionNote)
           .expect(201)
           .expect(res => {
@@ -252,6 +285,7 @@ describe('Session Notes Endpoints', function() {
 
           return supertest(app)
             .post('/api/session-notes')
+            .set('Authorization', makeAuthHeader(testUsers[0]))
             .send(newSessionNote)
             .expect(400, {
               error: { message: `Missing '${field}' in request body` }
@@ -263,6 +297,7 @@ describe('Session Notes Endpoints', function() {
         const { maliciousSessionNote, expectedSessionNote } = makeMaliciousSessionNotes();
         return supertest(app)
           .post(`/api/session-notes`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(maliciousSessionNote)
           .expect(201)
           .expect(res => {
@@ -274,10 +309,32 @@ describe('Session Notes Endpoints', function() {
 
   describe(`DELETE /api/session-notes/:sess_id`, () => {
     context(`Given no session notes`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert sessions', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+      });
+
       it(`responds with 404`, () => {
         const sess_id = 123;
         return supertest(app)
           .delete(`/api/session-notes/${sess_id}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Session notes don't exist` } })
       })
     });
@@ -287,15 +344,22 @@ describe('Session Notes Endpoints', function() {
         const testGames = makeGamesArray();
         const testSessions = makeSessionsWIDArray();
         const testSessionNotes = makeSessionNotesArray();
+
+        function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+          const token = jwt.sign({ user_id: user.id }, secret, {
+            subject: user.name,
+            algorithm: 'HS256',
+          });
   
-        beforeEach('insert session scores', () => {
+          return `Bearer ${token}`
+        }
+  
+        beforeEach('insert sessions', () => {
           return db
-            .into('users')
-            .insert(testUsers)
+            .into('games')
+            .insert(testGames)
             .then(() => {
-              return db
-                  .into('games')
-                  .insert(testGames)
+              helpers.seedUsers(db, testUsers)
             })
             .then(() => {
                 return db
@@ -303,63 +367,138 @@ describe('Session Notes Endpoints', function() {
                   .insert(testSessions)
             })
             .then(() => {
-                return db 
-                  .into('session_notes')
-                  .insert(testSessionNotes)
-            })
+              return db 
+                .into('session_notes')
+                .insert(testSessionNotes)
+          })
         });
 
-      it('responds with 204 and removes the note', () => {
-        const idToRemove = 2
-        const expectedSessionNote = testSessionNotes.filter(sess => sess.id !== idToRemove)
-        return supertest(app)
-          .delete(`/api/session-notes/${idToRemove}`)
-          .expect(204)
-          .then(res =>
-            supertest(app)
-              .get(`/api/session-notes`)
-              .expect(expectedSessionNote)
-          )
-      });
+        it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+          return supertest(app)
+            .post('/api/game-tips')
+            .expect(401, { error: `Missing bearer token` })
+        });
+  
+        it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+          const validUser = testUsers[0];
+          const invalidSecret = 'bad-secret';
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+            .expect(401, { error: `Unauthorized request` })
+        });
+        
+        it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+          const invalidUser = { name: 'user-not-existy', id: 1 };
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(invalidUser))
+            .expect(401, { error: `Unauthorized request` })
+        });
+
+        it('responds with 204 and removes the note', () => {
+          const idToRemove = 2
+          const expectedSessionNote = testSessionNotes.filter(sess => sess.id !== idToRemove)
+          return supertest(app)
+            .delete(`/api/session-notes/${idToRemove}`)
+            .set('Authorization', makeAuthHeader(testUsers[0]))
+            .expect(204)
+            .then(res =>
+              supertest(app)
+                .get(`/api/session-notes`)
+                .expect(expectedSessionNote)
+            )
+        });
     });
   });
 
   describe(`PATCH /api/session-notes/:sess_id`, () => {
     context(`Given no session notes`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert sessions', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+      });
+
       it(`responds with 404`, () => {
         const sess_id = 123;
         return supertest(app)
-          .delete(`/api/session-notes/${sess_id}`)
+          .patch(`/api/session-notes/${sess_id}`)
           .expect(404, { error: { message: `Session notes don't exist` } })
       })
     });
 
     context('Given there are session notes in the database', () => {
-        const testUsers = makeUsersArray();
-        const testGames = makeGamesArray();
-        const testSessions = makeSessionsWIDArray();
-        const testSessionNotes = makeSessionNotesArray();
-  
-        beforeEach('insert session scores', () => {
-          return db
-            .into('users')
-            .insert(testUsers)
-            .then(() => {
-                return db
-                  .into('games')
-                  .insert(testGames)
-            })
-            .then(() => {
-                return db
-                  .into('sessions')
-                  .insert(testSessions)
-            })
-            .then(() => {
-                return db 
-                  .into('session_notes')
-                  .insert(testSessionNotes)
-            })
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+      const testSessions = makeSessionsWIDArray();
+      const testSessionNotes = makeSessionNotesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
         });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert sessions', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+          .then(() => {
+              return db
+                .into('sessions')
+                .insert(testSessions)
+          })
+          .then(() => {
+            return db 
+              .into('session_notes')
+              .insert(testSessionNotes)
+        })
+      });
+
+      it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+        return supertest(app)
+          .post('/api/game-tips')
+          .expect(401, { error: `Missing bearer token` })
+      });
+
+      it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+        const validUser = testUsers[0];
+        const invalidSecret = 'bad-secret';
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
+      it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+        const invalidUser = { name: 'user-not-existy', id: 1 };
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(invalidUser))
+          .expect(401, { error: `Unauthorized request` })
+      });
 
       it('responds with 204 and updates the session notes', () => {
         const idToUpdate = 2;
@@ -374,6 +513,7 @@ describe('Session Notes Endpoints', function() {
         };
         return supertest(app)
           .patch(`/api/session-notes/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(updateSessionNote)
           .expect(204)
           .then(res =>
@@ -387,6 +527,7 @@ describe('Session Notes Endpoints', function() {
         const idToUpdate = 2
         return supertest(app)
           .patch(`/api/session-notes/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
@@ -407,6 +548,7 @@ describe('Session Notes Endpoints', function() {
 
         return supertest(app)
           .patch(`/api/session-notes/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({
             ...updateSessionNote,
             fieldToIgnore: 'should not be in GET response'

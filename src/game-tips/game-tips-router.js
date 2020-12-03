@@ -2,6 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const path = require('path');
 const GameTipsService = require('./game-tips-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const gameTipsRouter = express.Router();
 const jsonParser = express.json();
@@ -23,7 +24,7 @@ gameTipsRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { uid, game_id, tip } = req.body;
     const newGameTip = { uid, game_id, tip };
 
@@ -66,7 +67,7 @@ gameTipsRouter
   .get((req, res, next) => {
     res.json(serializeGameTips(res.tip))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     GameTipsService.deleteGameTip(
       req.app.get('db'),
       req.params.tip_id
@@ -76,7 +77,7 @@ gameTipsRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { uid, game_id, tip } = req.body;
     const newGameTip = { uid, game_id, tip };
 

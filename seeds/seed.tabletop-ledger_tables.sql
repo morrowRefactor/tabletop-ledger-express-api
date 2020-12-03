@@ -14,11 +14,11 @@ INSERT INTO games (title, bgg_id, bgg_rating, description, image)
 
 INSERT INTO users (name, about, joined_date, password) 
     VALUES
-        ('John Doe', 'I am a gaming enthusiast', '2020-05-05', 'something'),
-        ('Jane Doe', 'I am a gaming enthusiast', '2020-01-04', 'something'),
-        ('Joe Thornton', 'I am a gaming enthusiast', '2020-06-11', 'something'),
-        ('Brent Burns', 'I am a gaming enthusiast', '2020-10-10', 'something'),
-        ('Patrick Marleau', 'I am a gaming enthusiast', '2020-07-30', 'something')
+        ('John Doe', 'I am a gaming enthusiast', '2020-05-05', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
+        ('Jane Doe', 'I am a gaming enthusiast', '2020-01-04', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
+        ('Joe Thornton', 'I am a gaming enthusiast', '2020-06-11', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
+        ('Brent Burns', 'I am a gaming enthusiast', '2020-10-10', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
+        ('Patrick Marleau', 'I am a gaming enthusiast', '2020-07-30', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W')
 ;
 
 INSERT INTO sessions (game_id, uid, date, name)

@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const UserGamesByCatLogsService = require('../user-game-cat-logs/user-game-cat-logs-service');
 const UserGamesByMechLogsService = require('./user-game-mech-logs-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const userGamesByMechLogsRouter = express.Router();
 const jsonParser = express.json();
@@ -23,7 +24,7 @@ userGamesByMechLogsRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const newUserGameMechLog = req.body;
     let insertCount = 0;
 
@@ -81,7 +82,7 @@ userGamesByMechLogsRouter
   .get((req, res, next) => {
     res.json(serializeUserGameMechLogs(res.log))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     UserGamesByMechLogsService.deleteUserGameMechLog(
       req.app.get('db'),
       req.params.id
@@ -91,7 +92,7 @@ userGamesByMechLogsRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { uid, mech_id, sessions } = req.body;
     const userMechLogToUpdate = { uid, mech_id, sessions };
 

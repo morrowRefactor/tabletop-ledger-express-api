@@ -2,6 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const path = require('path');
 const UserReccosService = require('./user-reccos-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const userReccosRouter = express.Router();
 const jsonParser = express.json();
@@ -24,7 +25,7 @@ userReccosRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { uid, game_id, recco_game_id, note } = req.body;
     const newUserRecco = { uid, game_id, recco_game_id, note };
     const userReccoReqs = { uid, game_id, recco_game_id };
@@ -39,7 +40,6 @@ userReccosRouter
       newUserRecco
     )
       .then(recco => {
-        console.log('recco res', recco)
         res
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${recco.id}`))
@@ -69,7 +69,7 @@ userReccosRouter
   .get((req, res, next) => {
     res.json(serializeUserRecco(res.recco))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     UserReccosService.deleteUserRecco(
       req.app.get('db'),
       req.params.recco_id
@@ -79,7 +79,7 @@ userReccosRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { uid, game_id, recco_game_id, note } = req.body;
     const newUserRecco = { uid, game_id, recco_game_id, note };
     const userReccoReqs = { uid, game_id, recco_game_id };

@@ -4,6 +4,8 @@ const { expect } = require('chai');
 const { makeSessionsArray, makeSessionsWIDArray, makeMaliciousSession } = require('./sessions.fixtures');
 const { makeUsersArray } = require('./users.fixtures');
 const { makeGamesArray } = require('./games.fixtures');
+const helpers = require('./test-helpers');
+const jwt = require('jsonwebtoken');
 
 describe('Sessions Endpoints', function() {
   let db;
@@ -294,14 +296,21 @@ describe('Sessions Endpoints', function() {
     const testGames = makeGamesArray();
     const testSessions = makeSessionsArray();
 
+    function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+      const token = jwt.sign({ user_id: user.id }, secret, {
+        subject: user.name,
+        algorithm: 'HS256',
+      });
+
+      return `Bearer ${token}`
+    }
+
     beforeEach('insert sessions', () => {
       return db
-        .into('users')
-        .insert(testUsers)
+        .into('games')
+        .insert(testGames)
         .then(() => {
-            return db 
-              .into('games')
-              .insert(testGames)
+           helpers.seedUsers(db, testUsers)
         })
         .then(() => {
             return db
@@ -309,6 +318,30 @@ describe('Sessions Endpoints', function() {
               .insert(testSessions)
         })
     });
+
+    it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+      return supertest(app)
+        .post('/api/game-tips')
+        .expect(401, { error: `Missing bearer token` })
+    });
+
+    it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+      const validUser = testUsers[0];
+      const invalidSecret = 'bad-secret';
+      return supertest(app)
+        .post('/api/game-tips')
+        .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+        .expect(401, { error: `Unauthorized request` })
+    });
+    
+    it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+      const invalidUser = { name: 'user-not-existy', id: 1 };
+      return supertest(app)
+        .post('/api/game-tips')
+        .set('Authorization', makeAuthHeader(invalidUser))
+        .expect(401, { error: `Unauthorized request` })
+    });
+
 
     it(`creates a session, responding with 201 and the new session`, () => {
       const newSession = {
@@ -319,6 +352,7 @@ describe('Sessions Endpoints', function() {
 
       return supertest(app)
         .post('/api/sessions')
+        .set('Authorization', makeAuthHeader(testUsers[0]))
         .send(newSession)
         .expect(201)
         .expect(res => {
@@ -349,6 +383,7 @@ describe('Sessions Endpoints', function() {
 
         return supertest(app)
           .post('/api/sessions')
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(newSession)
           .expect(400, {
             error: { message: `Missing '${field}' in request body` }
@@ -368,6 +403,7 @@ describe('Sessions Endpoints', function() {
       it('removes XSS attack content', () => {
         return supertest(app)
           .get(`/api/sessions`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(200)
           .expect(res => {
             const resIndex = res.body.length - 1;
@@ -379,10 +415,32 @@ describe('Sessions Endpoints', function() {
 
   describe(`DELETE /api/sessions/:sess_id`, () => {
     context(`Given no sessions`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert sessions', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+      });
+
       it(`responds with 404`, () => {
         const sess_id = 123;
         return supertest(app)
           .delete(`/api/sessions/${sess_id}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Session doesn't exist` } })
       })
     });
@@ -392,69 +450,152 @@ describe('Sessions Endpoints', function() {
         const testGames = makeGamesArray();
         const testSessions = makeSessionsArray();
         const sessionsWIDs = makeSessionsWIDArray();
+
+        function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+          const token = jwt.sign({ user_id: user.id }, secret, {
+            subject: user.name,
+            algorithm: 'HS256',
+          });
+  
+          return `Bearer ${token}`
+        }
   
         beforeEach('insert sessions', () => {
           return db
-            .into('users')
-            .insert(testUsers)
+            .into('games')
+            .insert(testGames)
             .then(() => {
-                return db 
-                  .into('games')
-                  .insert(testGames)
+              helpers.seedUsers(db, testUsers)
             })
             .then(() => {
-                return db
-                  .into('sessions')
-                  .insert(testSessions)
-            })
+              return db
+                .into('sessions')
+                .insert(testSessions)
+          })
         });
 
-      it('responds with 204 and removes the session', () => {
-        const idToRemove = 2
-        const expectedSession = sessionsWIDs.filter(sess => sess.id !== idToRemove)
-        return supertest(app)
-          .delete(`/api/sessions/${idToRemove}`)
-          .expect(204)
-          .then(res =>
-            supertest(app)
-              .get(`/api/sessions`)
-              .expect(expectedSession)
-          )
-      });
+        it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+          return supertest(app)
+            .post('/api/game-tips')
+            .expect(401, { error: `Missing bearer token` })
+        });
+  
+        it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+          const validUser = testUsers[0];
+          const invalidSecret = 'bad-secret';
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+            .expect(401, { error: `Unauthorized request` })
+        });
+        
+        it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+          const invalidUser = { name: 'user-not-existy', id: 1 };
+          return supertest(app)
+            .post('/api/game-tips')
+            .set('Authorization', makeAuthHeader(invalidUser))
+            .expect(401, { error: `Unauthorized request` })
+        });
+
+        it('responds with 204 and removes the session', () => {
+          const idToRemove = 2
+          const expectedSession = sessionsWIDs.filter(sess => sess.id !== idToRemove)
+          return supertest(app)
+            .delete(`/api/sessions/${idToRemove}`)
+            .set('Authorization', makeAuthHeader(testUsers[0]))
+            .expect(204)
+            .then(res =>
+              supertest(app)
+                .get(`/api/sessions`)
+                .expect(expectedSession)
+            )
+        });
     });
   });
 
   describe(`PATCH /api/sessions/:sess_id`, () => {
     context(`Given no sessions`, () => {
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
+        });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert sessions', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+      });
+
       it(`responds with 404`, () => {
         const sess_id = 123;
         return supertest(app)
           .delete(`/api/sessions/${sess_id}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Session doesn't exist` } })
       })
     });
 
     context('Given there are sessions in the database', () => {
-        const testUsers = makeUsersArray();
-        const testGames = makeGamesArray();
-        const testSessions = makeSessionsArray();
-        const sessionsWIDs = makeSessionsWIDArray();
-  
-        beforeEach('insert sessions', () => {
-          return db
-            .into('users')
-            .insert(testUsers)
-            .then(() => {
-                return db 
-                  .into('games')
-                  .insert(testGames)
-            })
-            .then(() => {
-                return db
-                  .into('sessions')
-                  .insert(testSessions)
-            })
+      const testUsers = makeUsersArray();
+      const testGames = makeGamesArray();
+      const testSessions = makeSessionsArray();
+      const sessionsWIDs = makeSessionsWIDArray();
+
+      function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+        const token = jwt.sign({ user_id: user.id }, secret, {
+          subject: user.name,
+          algorithm: 'HS256',
         });
+
+        return `Bearer ${token}`
+      }
+
+      beforeEach('insert sessions', () => {
+        return db
+          .into('games')
+          .insert(testGames)
+          .then(() => {
+            helpers.seedUsers(db, testUsers)
+          })
+          .then(() => {
+            return db
+              .into('sessions')
+              .insert(testSessions)
+        })
+      });
+
+      it(`responds 401 'Missing bearer token' when no bearer token`, () => {
+        return supertest(app)
+          .post('/api/game-tips')
+          .expect(401, { error: `Missing bearer token` })
+      });
+
+      it(`responds 401 'Unauthorized request' when invalid JWT secret`, () => {
+        const validUser = testUsers[0];
+        const invalidSecret = 'bad-secret';
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(validUser, invalidSecret))
+          .expect(401, { error: `Unauthorized request` })
+      });
+      
+      it(`responds 401 'Unauthorized request' when invalid sub in payload`, () => {
+        const invalidUser = { name: 'user-not-existy', id: 1 };
+        return supertest(app)
+          .post('/api/game-tips')
+          .set('Authorization', makeAuthHeader(invalidUser))
+          .expect(401, { error: `Unauthorized request` })
+      });
 
       it('responds with 204 and updates the session', () => {
         const idToUpdate = 2;
@@ -469,6 +610,7 @@ describe('Sessions Endpoints', function() {
         };
         return supertest(app)
           .patch(`/api/sessions/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send(updateSession)
           .expect(204)
           .then(res =>
@@ -482,6 +624,7 @@ describe('Sessions Endpoints', function() {
         const idToUpdate = 2
         return supertest(app)
           .patch(`/api/sessions/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({ irrelevantField: 'foo' })
           .expect(400, {
             error: {
@@ -502,6 +645,7 @@ describe('Sessions Endpoints', function() {
 
         return supertest(app)
           .patch(`/api/sessions/${idToUpdate}`)
+          .set('Authorization', makeAuthHeader(testUsers[0]))
           .send({
             ...updateSession,
             fieldToIgnore: 'should not be in GET response'

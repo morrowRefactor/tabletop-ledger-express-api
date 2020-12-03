@@ -2,6 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const path = require('path');
 const SessionScoresService = require('./session-scores-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const sessionScoresRouter = express.Router();
 const jsonParser = express.json();
@@ -26,7 +27,7 @@ sessionScoresRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const newSessionScores = req.body;
     let insertCount = 0;
 
@@ -87,7 +88,7 @@ sessionScoresRouter
   .get((req, res, next) => {
     res.json(serializeSessionScores(res.sess))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     SessionScoresService.deleteScores(
       req.app.get('db'),
       req.params.sess_id
@@ -97,7 +98,7 @@ sessionScoresRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { session_id, game_id, uid, score, name, winner } = req.body;
     const newSessionScore = { session_id, game_id, uid, score, name, winner };
     const scoresToUpdate = { session_id, game_id, score, name, winner };

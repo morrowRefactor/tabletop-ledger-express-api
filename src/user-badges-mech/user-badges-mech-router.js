@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const MechUserBadgesService = require('./user-badges-mech-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const userBadgesMechRouter = express.Router();
 const jsonParser = express.json();
@@ -22,7 +23,7 @@ userBadgesMechRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { uid, badge_id, tier_id } = req.body;
     const newUserMechBadge = { uid, badge_id, tier_id };
 
@@ -65,7 +66,7 @@ userBadgesMechRouter
   .get((req, res, next) => {
     res.json(serializeMechUserBadges(res.badge))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     MechUserBadgesService.deleteMechUserBadge(
       req.app.get('db'),
       req.params.badge_id
@@ -75,7 +76,7 @@ userBadgesMechRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { uid, badge_id, tier_id } = req.body;
     const newUserMechBadge = { uid, badge_id, tier_id };
 

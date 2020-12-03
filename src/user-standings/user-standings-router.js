@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const UserStandingsService = require('./user-standings-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const userStandingsRouter = express.Router();
 const jsonParser = express.json();
@@ -23,7 +24,7 @@ userStandingsRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { uid, wins, losses, sessions } = req.body;
     const newUserStandings = { uid, wins, losses, sessions };
 
@@ -66,7 +67,7 @@ userStandingsRouter
   .get((req, res, next) => {
     res.json(serializeUserStandings(res.stand))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     UserStandingsService.deleteUserStandings(
       req.app.get('db'),
       req.params.stand_id
@@ -76,7 +77,7 @@ userStandingsRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { uid, wins, losses, sessions } = req.body;
     const newUserStandings = { uid, wins, losses, sessions };
 

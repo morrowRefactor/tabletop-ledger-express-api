@@ -2,6 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const path = require('path');
 const SessionNotesService = require('./session-notes-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const sessionNotesRouter = express.Router();
 const jsonParser = express.json();
@@ -23,7 +24,7 @@ sessionNotesRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { session_id, uid, note } = req.body;
     const newSessionNote = { session_id, uid, note };
 
@@ -66,7 +67,7 @@ sessionNotesRouter
   .get((req, res, next) => {
     res.json(serializeSessionNote(res.sess))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     SessionNotesService.deleteNote(
       req.app.get('db'),
       req.params.sess_id
@@ -76,7 +77,7 @@ sessionNotesRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { session_id, uid, note } = req.body;
     const noteToUpdate = { session_id, uid, note };
 

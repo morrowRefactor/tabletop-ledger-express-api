@@ -2,6 +2,7 @@ const express = require('express');
 const xss = require('xss');
 const path = require('path');
 const UserGamesService = require('./user-games-service');
+const { requireAuth } = require('../middleware/jwt-auth');
 
 const userGamesRouter = express.Router();
 const jsonParser = express.json();
@@ -26,7 +27,7 @@ userGamesRouter
       })
       .catch(next)
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireAuth, jsonParser, (req, res, next) => {
     const { uid, game_id, own, favorite, rating, notes } = req.body;
     const newUserGame = { uid, game_id, own, favorite, rating, notes };
     const userGameReqs = { uid, game_id };
@@ -36,6 +37,7 @@ userGamesRouter
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` }
         });
+    
     UserGamesService.insertUserGame(
       req.app.get('db'),
       newUserGame
@@ -70,7 +72,7 @@ userGamesRouter
   .get((req, res, next) => {
     res.json(serializeUserGames(res.game))
   })
-  .delete((req, res, next) => {
+  .delete(requireAuth, (req, res, next) => {
     UserGamesService.deleteUserGame(
       req.app.get('db'),
       req.params.game_id
@@ -80,7 +82,7 @@ userGamesRouter
       })
       .catch(next)
   })
-  .patch(jsonParser, (req, res, next) => {
+  .patch(requireAuth, jsonParser, (req, res, next) => {
     const { uid, game_id, own, favorite, rating, notes } = req.body;
     const newUserGame = { uid, game_id, own, favorite, rating, notes };
     const userGameReqs = { uid, game_id };
