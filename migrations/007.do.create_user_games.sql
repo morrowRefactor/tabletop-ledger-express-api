@@ -4,7 +4,7 @@ CREATE TABLE user_games (
         REFERENCES users(id) ON DELETE CASCADE NOT NULL,
     game_id INTEGER
         REFERENCES games(id) ON DELETE CASCADE NOT NULL,
-    own BOOLEAN NOT NULL,
+    own BOOLEAN,
     favorite INTEGER,
     rating NUMERIC,
     notes TEXT
