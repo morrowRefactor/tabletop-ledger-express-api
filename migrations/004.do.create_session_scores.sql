@@ -6,7 +6,7 @@ CREATE TABLE session_scores (
         REFERENCES games(id) ON DELETE CASCADE NOT NULL,
     uid INTEGER
         REFERENCES users(id) ON DELETE CASCADE,
-    score NUMERIC NOT NULL,
+    score NUMERIC,
     name TEXT NOT NULL,
     winner BOOLEAN NOT NULL
 );

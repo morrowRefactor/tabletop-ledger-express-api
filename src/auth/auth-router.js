@@ -22,7 +22,7 @@ authRouter
             return res.status(400).json({
                 error: 'Incorrect name or password',
             })
-    
+            
             return AuthService.comparePasswords(loginUser.password, dbUser.password)
             .then(compareMatch => {
                 if (!compareMatch) {
@@ -30,7 +30,7 @@ authRouter
                         error: 'Incorrect name or password',
                     });
                 }
-    
+                
                 const sub = dbUser.name;
                 const payload = { user_id: dbUser.id };
                 res.send({
