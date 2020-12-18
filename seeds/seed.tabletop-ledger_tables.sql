@@ -18,7 +18,8 @@ INSERT INTO users (name, about, joined_date, password)
         ('Jane Doe', 'I am a gaming enthusiast', '2020-01-04', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
         ('Joe Thornton', 'I am a gaming enthusiast', '2020-06-11', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
         ('Brent Burns', 'I am a gaming enthusiast', '2020-10-10', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
-        ('Patrick Marleau', 'I am a gaming enthusiast', '2020-07-30', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W')
+        ('Patrick Marleau', 'I am a gaming enthusiast', '2020-07-30', '$2a$12$U95G.I2PJceWAsImRzjW8uOlIeDXmyTscaM4bmFPQ9RtPMY6mZ.6W'),
+        ('Testy McTester', 'I am a gaming enthusiast', '2020-12-01', '$2a$12$A8BijkCJ46eFlnvp6n0CAOQ0C4AR.cg7xp0mIhpJ7sJutfD4AGnmK')
 ;
 
 INSERT INTO sessions (game_id, uid, date, name)
@@ -160,7 +161,8 @@ INSERT INTO user_standings (uid, wins, losses, sessions)
         (2, 1, 3, 4),
         (3, 0, 1, 1),
         (4, 0, 2, 2),
-        (5, 0, 1, 1)
+        (5, 0, 1, 1),
+        (6, 0, 0, 0)
 ;
 
 INSERT INTO games_cat_matches (game_id, cat_id)

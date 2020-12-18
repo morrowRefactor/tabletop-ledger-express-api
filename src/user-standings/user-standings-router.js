@@ -33,6 +33,7 @@ userStandingsRouter
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` }
         });
+    
     UserStandingsService.insertUserStandings(
       req.app.get('db'),
       newUserStandings

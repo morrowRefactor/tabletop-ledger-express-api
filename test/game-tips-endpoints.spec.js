@@ -190,7 +190,7 @@ describe('Game Tips Endpoints', function() {
             helpers.seedUsers(db, testUsers)
           })
       });
-
+      
       it(`responds 401 'Missing bearer token' when no bearer token`, () => {
         return supertest(app)
           .post('/api/game-tips')
@@ -261,7 +261,7 @@ describe('Game Tips Endpoints', function() {
             })
         });
       });
-
+      
       it('removes XSS attack content from response', () => {
         const { maliciousGameTip, expectedGameTip } = makeMaliciousGameTips();
         return supertest(app)

@@ -27,7 +27,7 @@ gameTipsRouter
   .post(requireAuth, jsonParser, (req, res, next) => {
     const { uid, game_id, tip } = req.body;
     const newGameTip = { uid, game_id, tip };
-
+    console.log('gametiprouter', newGameTip)
     for (const [key, value] of Object.entries(newGameTip))
       if (value == null)
         return res.status(400).json({
