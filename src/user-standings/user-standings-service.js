@@ -20,6 +20,7 @@ const UserStandingsService = {
             .delete()
     },
     updateUserStandings(knex, id, newUserStandingsFields) {
+        (console.log('userstans', id, { id }, newUserStandingsFields))
         return knex('user_standings')
             .where({ id })
             .update(newUserStandingsFields)

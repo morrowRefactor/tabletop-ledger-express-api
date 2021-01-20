@@ -95,7 +95,7 @@ userGamesRouter
         }
       });
     };
-
+    
     UserGamesService.updateUserGame(
         req.app.get('db'),
         req.params.game_id,

@@ -34,7 +34,6 @@ usersRouter
   })
   .post(jsonParser, (req, res, next) => {
     const { name, about, password, joined_date } = req.body;
-    const newUser = { name, about, password, joined_date };
     const userReqs = { name, password };
 
     for (const [key, value] of Object.entries(userReqs))
