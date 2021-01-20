@@ -8,7 +8,7 @@ const jsonParser = express.json();
 sessionPackageRouter
   .route('/')
   .post(requireAuth, jsonParser, (req, res, next) => {
-    const { hostStats, notes, scores, newCatLogs, newMechLogs, updateCatLogs, updateMechLogs} = req.body;
+    const { hostStats, notes, scores, newCatLogs, newMechLogs, updateCatLogs, updateMechLogs, newCatBadges, updateCatBadges, newMechBadges, updateMechBadges } = req.body;
     
     // check for missing data
     const numberOfValues = Object.values(hostStats).filter(Boolean).length;
@@ -91,6 +91,52 @@ sessionPackageRouter
       })
     }
 
+    if(newCatBadges) {
+      newCatBadges.forEach(badge => {
+        for (const [key, value] of Object.entries(badge))
+        if (value == null)
+          return res.status(400).json({
+            error: { message: `Missing '${key}' in new category badges request body` }
+          });
+      })
+    }
+
+    if(newMechBadges) {
+      newMechBadges.forEach(badge => {
+        for (const [key, value] of Object.entries(badge))
+        if (value == null)
+          return res.status(400).json({
+            error: { message: `Missing '${key}' in new mechanic badges request body` }
+          });
+      })
+    }
+
+    if(updateCatBadges) {
+      updateCatBadges.forEach(badge => {
+        const numberOfValues = Object.values(badge).filter(Boolean).length;
+        if (numberOfValues === 0) {
+            return res.status(400).json({
+            error: {
+              message: `Update category badge request body must contain a user ID, badge ID, and badge tier ID`
+            }
+          });
+        };
+      })
+    }
+
+    if(updateMechBadges) {
+      updateMechBadges.forEach(badge => {
+        const numberOfValues = Object.values(badge).filter(Boolean).length;
+        if (numberOfValues === 0) {
+            return res.status(400).json({
+            error: {
+              message: `Update mechanic badge request body must contain a user ID, badge ID, and badge tier ID`
+            }
+          });
+        };
+      })
+    }
+
     // insert session notes if present
     if(notes) {
         SessionPackageService.insertNote(
@@ -153,6 +199,57 @@ sessionPackageRouter
         .then(numRowsAffected => {
         })
         .catch(next);
+      })
+    }
+
+    // update user badge data
+    if(newCatBadges) {
+      newCatBadges.forEach(badge => {
+        SessionPackageService.insertCatUserBadge(
+          req.app.get('db'),
+          badge
+        )
+        .then(badge => {
+        })
+        .catch(next)
+      })
+    }
+
+    if(newMechBadges) {
+      newMechBadges.forEach(badge => {
+        SessionPackageService.insertMechUserBadge(
+          req.app.get('db'),
+          badge
+        )
+        .then(badge => {
+        })
+        .catch(next)
+      })
+    }
+
+    if(updateCatBadges) {
+      updateCatBadges.forEach(badge => {
+        SessionPackageService.updateCatUserBadge(
+          req.app.get('db'),
+          badge.id,
+          badge
+        )
+        .then(numRowsAffected => {
+        })
+        .catch(next)
+      })
+    }
+
+    if(updateMechBadges) {
+      updateMechBadges.forEach(badge => {
+        SessionPackageService.updateMechUserBadge(
+          req.app.get('db'),
+          badge.id,
+          badge
+        )
+        .then(numRowsAffected => {
+        })
+        .catch(next)
       })
     }
 

@@ -49,6 +49,34 @@ const SessionPackageService = {
         return knex('user_game_mech_logs')
             .where({ id })
             .update(newUserGameMechLogFields)
+    },
+    insertCatUserBadge(knex, newUserBadgeCat) {
+        return knex
+            .insert(newUserBadgeCat)
+            .into('user_badges_cat')
+            .returning('*')
+            .then(rows => {
+                return rows[0]
+            })
+    },
+    updateCatUserBadge(knex, id, newUserBadgeCatFields) {
+        return knex('user_badges_cat')
+            .where({ id })
+            .update(newUserBadgeCatFields)
+    },
+    insertMechUserBadge(knex, newUserBadgeMech) {
+        return knex
+            .insert(newUserBadgeMech)
+            .into('user_badges_mech')
+            .returning('*')
+            .then(rows => {
+                return rows[0]
+            })
+    },
+    updateMechUserBadge(knex, id, newUserBadgeMechFields) {
+        return knex('user_badges_mech')
+            .where({ id })
+            .update(newUserBadgeMechFields)
     }
 };
 
