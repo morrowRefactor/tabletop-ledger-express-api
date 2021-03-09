@@ -19,13 +19,11 @@ gamesRouter
   .route('/')
   .get((req, res, next) => {
     const knexInstance = req.app.get('db');
-    res.json(knexInstance)
-    /*
     GamesService.getAllGames(knexInstance)
       .then(game => {
         res.json(game.map(serializeGames))
       })
-      .catch(next)*/
+      .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
     const { title, description, image, bgg_id, bgg_rating } = req.body;
