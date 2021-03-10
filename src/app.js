@@ -60,12 +60,12 @@ app.use('/api/user-game-mech-logs', userGamesByMechRouter);
 app.use('/api/auth', authRouter);
 
 app.get('/', (req, res) => {
-  res.send('Hello, world v1')
+  res.send('Hello, world')
 });
 
 app.use(function errorHandler(error, req, res, next) {
    let response;
-   if (NODE_ENV === 'test') {
+   if (NODE_ENV === 'production') {
    response = { error: { message: 'server error' } }
      } else {
      console.error(error)
